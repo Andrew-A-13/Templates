@@ -1,0 +1,19 @@
+pair<int, int> f(int a, int b, int c)
+{
+ if (b == 0)
+ {
+  return { c/a,0 };
+ }
+ int d, r;
+ d = a / b;
+ r = a - d * b;
+ if (r < 0)
+ {
+  r += b;
+  d--;
+ }
+ pair<int, int> L = f(b, r, c + b * d);
+ swap(L.first, L.second);
+ L.second = (c - a * L.first) / b;
+ return L;
+}
