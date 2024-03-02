@@ -1,0 +1,75 @@
+struct TREE {
+    struct field {
+        field() {
+            sum = lazy = 0;
+        }
+        int sum = 0;
+        int lazy = 0;
+    };
+    static const int N = 300000;
+    field Tree[4*N];
+    int st = 0;
+ 
+    // [L ; R)
+    void upd(int index, int cur_st, int L, int R, int S)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (R <= LL || RR <= L)
+        {
+            return;
+        }
+        Tree[index].sum += S * (min(RR, R) - max(LL, L));
+        if (L <= LL && RR <= R)
+        {
+            Tree[index].lazy += S; return;
+        }
+        upd(index * 2, cur_st + 1, L, R, S); upd(index * 2 + 1, cur_st + 1, L, R, S);
+    }
+ 
+    int Get(int index, int cur_st, int L, int R, int S = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (R <= LL || RR <= L)
+        {
+            return 0;
+        }
+        if (L <= LL && RR <= R)
+        {
+            return Tree[index].sum + S * (RR - LL);
+        }
+        S += Tree[index].lazy;
+        return Get(index * 2, cur_st + 1, L, R, S) + Get(index * 2 + 1, cur_st + 1, L, R, S);
+    }
+ 
+    void reset(int n)
+    {
+        for (int i = 0; i < min(4 * n + 3, (1 << 19) + 5LL); i++)
+        {
+            Tree[i] = field();
+        }
+        st = 0;
+        while ((1 << st) < n)
+        {
+            st++;
+        }
+    }
+ 
+    void build(const vector<int>& A)
+    {
+        for (int i = (1 << st); i < (1 << st) + A.size(); i++)
+        {
+            Tree[i].sum = A[i - (1 << st)];
+        }
+        int cur_st = st - 1;
+        while (cur_st >= 0)
+        {
+            for (int i = (1 << cur_st); i < 2 * (1 << cur_st); i++)
+            {
+                Tree[i].sum = (Tree[i * 2].sum + Tree[2 * i + 1].sum);
+            }
+            cur_st--;
+        }
+    }
+};
