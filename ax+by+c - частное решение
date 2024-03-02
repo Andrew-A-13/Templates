@@ -17,3 +17,5 @@ pair<int, int> f(int a, int b, int c)
  L.second = (c - a * L.first) / b;
  return L;
 }
+
+// ???
