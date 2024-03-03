@@ -1,4 +1,4 @@
-struct TREE {
+struct SegTree {
     struct field {
         field() {
             sum = lazy = 0;
