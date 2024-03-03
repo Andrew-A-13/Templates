@@ -1,0 +1,95 @@
+struct Tree2D {
+    struct FTree {
+        vector<int> tree;
+
+        void build(const vector<int>& A)
+        {
+            tree.resize(A.size(), 0);
+            for (int i = 0; i < A.size(); i++)
+            {
+                upd(i, A[i]);
+            }
+        }
+        void upd(int index, int value)
+        {
+            while (index < tree.size())
+            {
+                tree[index] += value;
+                index |= index + 1;
+            }
+        }
+        int get(int r)
+        {
+            int ans = 0;
+            while (r >= 0)
+            {
+                ans += tree[r];
+                r = (r & (r + 1)) - 1;
+            }
+            return ans;
+        }
+        int get(int l, int r)
+        {
+            return get(r - 1) - get(l - 1);
+        }
+    };
+    vector<FTree> tree;
+    int st = 0;
+    void build(const vector<const vector<int>>& A)
+    {
+        int n = A.size();
+        while ((1 << st) < n)
+            st++;
+        tree.resize((1 << st) * 2);
+        for (int i = 1; i < tree.size(); i++)
+        {
+            tree[i].build(A[i]);
+        }
+        int cur_st = st - 1;
+        while (cur_st >= 0)
+        {
+            for (int i = (1 << cur_st); i < 2 * (1 << cur_st); i++)
+            {
+                for (int j = 0; j < tree[i].tree.size(); i++)
+                {
+                    tree[i].tree[j] = tree[2 * i].tree[j] + tree[2 * i + 1].tree[j];
+                }
+            }
+            cur_st--;
+        }
+
+    }
+
+    void upd(int x, int y, int value, int index = 1, int cur_st = 0)
+    {
+        tree[index].upd(x, value);
+        if (st == cur_st)
+            return;
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        int mid = (LL + RR) / 2;
+        if (y < mid)
+        {
+            upd(x, y, value, index * 2, cur_st + 1);
+        }
+        else
+        {
+            upd(x, y, value, index * 2 + 1, cur_st + 1);
+        }
+    }
+
+    int get(int x1, int y1, int x2, int y2, int index = 1, int cur_st = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (RR <= y1 || y2 <= LL)
+            return 0;
+        if (y1 <= LL && RR <= y2)
+        {
+            return tree[index].get(x1, x2);
+        }
+        return get(x1, y1, x2, y2, index * 2, cur_st + 1) + get(x1, y1, x2, y2, index * 2 + 1, cur_st + 1);
+    }
+};
+
+// 50%
