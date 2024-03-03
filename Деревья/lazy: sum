@@ -6,12 +6,12 @@ struct TREE {
         int sum = 0;
         int lazy = 0;
     };
-    static const int N = 300000;
-    field Tree[4*N];
+    static const int N = 100000;
+    field Tree[4 * N];
     int st = 0;
- 
+
     // [L ; R)
-    void upd(int index, int cur_st, int L, int R, int S)
+    void upd(int L, int R, int S, int index = 1, int cur_st = 0)
     {
         int LL = index * (1 << (st - cur_st)) - (1 << st);
         int RR = LL + (1 << (st - cur_st));
@@ -24,10 +24,10 @@ struct TREE {
         {
             Tree[index].lazy += S; return;
         }
-        upd(index * 2, cur_st + 1, L, R, S); upd(index * 2 + 1, cur_st + 1, L, R, S);
+        upd(L, R, S, index * 2, cur_st + 1); upd(L, R, S, index * 2 + 1, cur_st + 1);
     }
- 
-    int Get(int index, int cur_st, int L, int R, int S = 0)
+
+    int Get(int L, int R, int S = 0, int index = 1, int cur_st = 0)
     {
         int LL = index * (1 << (st - cur_st)) - (1 << st);
         int RR = LL + (1 << (st - cur_st));
@@ -40,12 +40,12 @@ struct TREE {
             return Tree[index].sum + S * (RR - LL);
         }
         S += Tree[index].lazy;
-        return Get(index * 2, cur_st + 1, L, R, S) + Get(index * 2 + 1, cur_st + 1, L, R, S);
+        return Get(L, R, S, index * 2, cur_st + 1) + Get(L, R, S, index * 2 + 1, cur_st + 1);
     }
- 
+
     void reset(int n)
     {
-        for (int i = 0; i < min(4 * n + 3, (1 << 19) + 5LL); i++)
+        for (int i = 0; i < min(4 * n + 3, 4*N); i++)
         {
             Tree[i] = field();
         }
@@ -55,7 +55,7 @@ struct TREE {
             st++;
         }
     }
- 
+
     void build(const vector<int>& A)
     {
         for (int i = (1 << st); i < (1 << st) + A.size(); i++)
@@ -72,6 +72,12 @@ struct TREE {
             cur_st--;
         }
     }
+
+    void reset_and_build(const vector<int>& A)
+    {
+        reset(A.size());
+        build(A);
+    }
 };
 
-// 70%
+// 100%
