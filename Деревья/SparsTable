@@ -1,0 +1,58 @@
+struct SparsTable {
+    static const int N = 300000;
+    static const int logN = 20;
+    int firstOne[N + 5];
+    int Table[N][logN];
+
+    int Oper(int a, int b)
+    {
+        return min(a, b);
+    }
+    int neutral = LLONG_MAX;
+
+    SparsTable()
+    {
+        int cur_bit = 0;
+        for (int i = 0; i < N; i++)
+        {
+            if (i == (1 << cur_bit))
+            {
+                cur_bit++;
+            }
+            firstOne[i] = cur_bit;
+        }
+    }
+
+    void build(const vector<int>& A)
+    {
+        int n = A.size();
+        int bit = 0;
+        while (n >= (1 << bit))
+        {
+            bit++;
+        }
+
+        //Table.resize(n, vector<int>(bit));
+        for (int i = 0; i < n; i++)
+        {
+            Table[i][0] = A[i];
+        }
+        int cur_bit = 1;
+        while (cur_bit < bit)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                Table[i][cur_bit] = Oper(Table[i][cur_bit - 1], (
+                    i + (1 << (cur_bit - 1)) < n ? Table[i + (1 << (cur_bit - 1))][cur_bit - 1] : neutral));
+            }
+            ++cur_bit;
+        }
+    }
+
+    // [l; r)
+    int get(int l, int r)
+    {
+        int st = firstOne[r - l] - 1;
+        return Oper(Table[l][st], Table[r - (1 << st)][st]);
+    }
+};
