@@ -1,0 +1,13 @@
+int f(int a, int st = mod - 2)
+{
+ if (st == 0)
+  return 1;
+ if (st == 1)
+  return a;
+ if (st % 2 == 1)
+ {
+  return (a * f(a, st - 1)) % mod;
+ }
+ int b = f(a, st / 2);
+ return (b * b) % mod;
+}
