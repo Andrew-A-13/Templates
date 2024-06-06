@@ -5,8 +5,8 @@ namespace GrapfAero {
 
 struct Hashing {
     
-    static const int mod1 = 1e9 + 7, k1 = 10;
-    static const int mod2 = 1e9 + 9, k2 = 10;
+    static const int mod1 = 1e9 + 7, k1 = 31;
+    static const int mod2 = 1e9 + 9, k2 = 37;
     static const int N = 2e5;
     
     vector<pair<int, int>> pref;
