@@ -29,7 +29,7 @@ struct Hashing {
         for (int i = 0; i < n; i++)
         {
             h.first *= k1; h.second *= k2;
-            h.first += S[i] - '0' + 1; h.second += S[i] - '0' + 1;
+            h.first += S[i] - 'a' + 1; h.second += S[i] - 'a' + 1;
             h.first %= mod1; h.second %= mod2;
             pref[i] = h;
         }
