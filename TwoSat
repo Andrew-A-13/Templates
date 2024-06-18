@@ -1,0 +1,165 @@
+template<class Key>
+struct TwoSat {
+
+    /*Key extra;
+    void inc()
+    {
+        extra.first++;
+    }*/
+
+    map<Key, int> I; //можно ускорить заменив I на функцию за O(1) и изначально инициализируя граф
+    vector<vector<int>> Gr;
+    vector<int> cmp;
+    void addkey(Key k)
+    {
+        I[k] = Gr.size();
+        Gr.push_back(vector<int>());
+        Gr.push_back(vector<int>());
+    }
+
+    void Xor(Key u, Key v)
+    {
+        addedge(u, v, true, false);
+        addedge(u, v, false);
+    }
+
+    void same(Key u, Key v)
+    {
+        addedge(u, v, false, false);
+        addedge(u, v);
+    }
+
+    void Or(Key u, Key v)
+    {
+        addedge(u, v, false);
+    }
+
+    void addedge(Key from, Key to, bool from_original = true, bool to_original = true)
+    {
+        if (!I.contains(from))
+        {
+            addkey(from);
+        }
+        if (!I.contains(to))
+        {
+            addkey(to);
+        }
+        int From = I[from], To = I[to];
+        if (!from_original) From++;
+        if (!to_original) To++;
+
+        Gr[From].push_back(To);
+        From ^= 1;
+        To ^= 1;
+        Gr[To].push_back(From);
+    }
+
+    bool find_basic_solution()
+    {
+        int n = Gr.size();
+        vector<bool> used(n, false);
+        vector<int> topsort;
+        for (int i = 0; i < n; i++)
+        {
+            if (!used[i])
+            {
+                dfs1(Gr, used, i, topsort);
+            }
+        }
+        reverse(topsort.begin(), topsort.end());
+        vector<vector<int>> GrT(n);
+        for (int i = 0; i < n; i++)
+        {
+            for (auto x : Gr[i])
+            {
+                GrT[x].push_back(i);
+            }
+        }
+        int C = 0;
+        cmp.resize(n);
+        for (int i = 0; i < n; i++)used[i] = false;
+        for (int i = 0; i < n; i++)
+        {
+            if (!used[topsort[i]])
+            {
+                dfs2(GrT, used, topsort[i], C, cmp);
+                C++;
+            }
+        }
+        for (int i = 0; i < n; i += 2)
+        {
+            if (cmp[i] == cmp[i + 1])return false;
+        }
+        return true;
+    }
+
+    bool getvalue(Key k)
+    {
+        int i = I[k];
+        return cmp[i] > cmp[i + 1];
+    }
+
+    void no_more_than_one(vector<Key>& A)
+    {
+        int n = A.size();
+        vector<int> index(n);
+        for (int i = 0; i < n; i++)
+        {
+            if (!I.contains(A[i]))
+            {
+                addkey(A[i]);
+            }
+            index[i] = I[A[i]];
+        }
+        vector<int> d(n);
+        for (int i = 0; i < n; i++)
+        {
+            d[i] = Gr.size();
+            Gr.push_back(vector<int>());
+            Gr.push_back(vector<int>());
+        }
+        for (int i = 0; i < n; i++)
+        {
+            addedge_main(index[i], d[i]);
+            if (i == 0)continue;
+            addedge_main(d[i - 1], d[i]);
+            addedge_main(index[i], d[i - 1], true, false);
+        }
+    }
+private:
+    void addedge_main(int From, int To, bool from_original = true, bool to_original = true)
+    {
+        if (!from_original) From++;
+        if (!to_original) To++;
+
+        Gr[From].push_back(To);
+        From ^= 1;
+        To ^= 1;
+        Gr[To].push_back(From);
+    }
+
+    static void dfs1(vector<vector<int>>& Gr, vector<bool>& used, int index, vector<int>& topsort)
+    {
+        used[index] = true;
+        for (auto u : Gr[index])
+        {
+            if (!used[u])
+            {
+                dfs1(Gr, used, u, topsort);
+            }
+        }
+        topsort.push_back(index);
+    }
+
+    static void dfs2(vector<vector<int>>& Gr, vector<bool>& used, int index, int C, vector<int>& cmp)
+    {
+        used[index] = true; cmp[index] = C;
+        for (auto u : Gr[index])
+        {
+            if (!used[u])
+            {
+                dfs2(Gr, used, u, C, cmp);
+            }
+        }
+    }
+};
