@@ -1,0 +1,98 @@
+namespace FFT {
+    unsigned long long log2Floor(unsigned long long n) { return (unsigned long long)63 - std::countl_zero<unsigned long long>(n); }
+    unsigned long long log2Ceil(unsigned long long n) { return (unsigned long long)64 - std::countl_zero<unsigned long long>(n - 1); }
+
+    using Complex = complex<double>;
+
+
+    void fft(vector<Complex>& A, bool normal = true)
+    {
+        int n = A.size();
+        int k = log2Floor(n);
+        vector<Complex> B(n);
+        vector<int> pos(n);
+        pos[0] = 0;
+        int oldest = -1;
+        for (int i = 1; i < n; i++)
+        {
+            if ((i & (i - 1)) == 0)
+            {
+                oldest++;
+            }
+            pos[i] = pos[i ^ (1 << oldest)] + (1 << (k - 1 - oldest));
+        }
+        for (int i = 0; i < n; i++)
+        {
+            B[i] = A[pos[i]];
+        }
+        swap(A, B);
+        vector<Complex> St(n);
+        Complex x, y, w1, w;
+        int J;
+
+        for (int j = 0; j < k; j++)
+        {
+            J = (1 << (j + 1));
+            w1 = Complex(cos(2 * acos(-1) / J), (normal ? 1 : -1) * sin(2 * acos(-1) / J));
+            w = 1;
+            for (int i = 0; i < (1 << j); i++)
+            {
+                St[i] = w;
+                w *= w1;
+            }
+            for (int i = 0; i < n; i += (1 << (j + 1)))
+            {
+                for (int s = i; s < i + (1 << j); s++)
+                {
+                    x = A[s]; y = A[s + (1 << j)];
+                    A[s] = x + y * St[s - i];
+                    A[s + (1 << j)] = x - y * St[s - i];
+                }
+            }
+        }
+        if (!normal)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                A[i] /= n;
+            }
+        }
+    }
+
+    //a0 + a1*x + a2*x^2+...
+    void Multiply(vector<int>& A, vector<int>& B, vector<int>& res)
+    {
+        int n = A.size() + B.size() - 1;
+        int k = log2Ceil(n);
+        n = (1 << k);
+
+        vector<Complex> AA(n, 0), BB(n, 0);
+        for (int i = 0; i < A.size(); i++)
+        {
+            AA[i] = A[i];
+        }
+        for (int i = 0; i < B.size(); i++)
+        {
+            BB[i] = B[i];
+        }
+        fft(AA); fft(BB);
+        vector<Complex> R(n);
+        for (int i = 0; i < n; i++)
+        {
+            R[i] = AA[i] * BB[i];
+        }
+        fft(R, false);
+        res.resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            res[i] = round(R[i].real());
+        }
+        for (int i = res.size() - 1; i >= 0; i--)
+        {
+            if (res[i] != 0)
+            {
+                res.resize(i + 1); break;
+            }
+        }
+    }
+}
