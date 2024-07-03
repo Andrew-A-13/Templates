@@ -1,0 +1,173 @@
+namespace FFT {
+    //prime: 7340033 = 7·2 ^ 20 + 1; w: 5 (w^ { 2 ^ 20 } ≡ 1)
+    //prime : 13631489 = 13·2 ^ 20 + 1; w: 3 (w^ { 2 ^ 20 } ≡ 1)
+    //prime : 23068673 = 11·2 ^ 21 + 1; w: 38 (w^ { 2 ^ 21 } ≡ 1)
+    //prime : 69206017 = 33·2 ^ 21 + 1; w: 45 (w^ { 2 ^ 21 } ≡ 1)
+    //prime : 81788929 = 39·2 ^ 21 + 1; w: 94 (w^ { 2 ^ 21 } ≡ 1)
+    //prime : 104857601 = 25·2 ^ 22 + 1; w: 21 (w^ { 2 ^ 22 } ≡ 1)
+    //prime : 113246209 = 27·2 ^ 22 + 1; w: 66 (w^ { 2 ^ 22 } ≡ 1)
+    //prime : 138412033 = 33·2 ^ 22 + 1; w: 30 (w^ { 2 ^ 22 } ≡ 1)
+    //prime : 155189249 = 37·2 ^ 22 + 1; w: 3 (w^ { 2 ^ 22 } ≡ 1)
+    //prime : 163577857 = 39·2 ^ 22 + 1; w: 55 (w^ { 2 ^ 22 } ≡ 1)
+    //prime : 167772161 = 5·2 ^ 25 + 1; w: 17 (w^ { 2 ^ 25 } ≡ 1)
+    //prime : 469762049 = 7·2 ^ 26 + 1; w: 30 (w^ { 2 ^ 26 } ≡ 1)
+    //prime : 998244353 = 119·2 ^ 23 + 1; w: 31 (w^ { 2 ^ 23 } ≡ 1)
+    unsigned long long log2Floor(unsigned long long n) { return (unsigned long long)63 - std::countl_zero<unsigned long long>(n); }
+    unsigned long long log2Ceil(unsigned long long n) { return (unsigned long long)64 - std::countl_zero<unsigned long long>(n - 1); }
+
+    struct fft_modular {
+        fft_modular(int mod,int w0,int MAX_ST)
+        : mod(mod)
+        , w0(w0)
+        , MAX_ST(MAX_ST){}
+
+        // [0;4)
+        fft_modular(int template_index)
+        {
+            switch (template_index)
+            {
+            case 0:
+            {
+                mod = 998244353;
+                w0 = 31;
+                MAX_ST = 23;
+            }break;
+            case 1:
+            {
+                mod = 7340033;
+                w0 = 5;
+                MAX_ST = 20;
+            }break;
+            case 2:
+            {
+                mod = 469762049;
+                w0 = 30;
+                MAX_ST = 26;
+            }break;
+            case 3:
+            {
+                mod = 167772161;
+                w0 = 17;
+                MAX_ST = 25;
+            }break;
+            default:
+                throw "wrong fft index";
+                break;
+            }
+        }
+
+        int mod;
+        int w0, MAX_ST;
+        //mod-2
+        int f(int a, int st)
+        {
+            int res = 1;
+            while (st)
+            {
+                if (st & 1) { res = (res * a) % mod; }
+                a = (a * a) % mod;
+                st >>= 1;
+            }
+            return res;
+        }
+        void fft(vector<int>& A, bool normal = true)
+        {
+            int n = A.size();
+            int k = log2Floor(n);
+            vector<int> B(n);
+            vector<int> pos(n);
+            pos[0] = 0;
+            int oldest = -1;
+            for (int i = 1; i < n; i++)
+            {
+                if ((i & (i - 1)) == 0)
+                {
+                    oldest++;
+                }
+                pos[i] = pos[i ^ (1 << oldest)] + (1 << (k - 1 - oldest));
+            }
+            for (int i = 0; i < n; i++)
+            {
+                B[i] = A[pos[i]];
+            }
+            swap(A, B);
+            vector<int> St(n);
+            int x, y, w1, w;
+            int J;
+
+            for (int j = 0; j < k; j++)
+            {
+                w1 = f(w0, (1 << (MAX_ST - j - 1)));
+                if (!normal)
+                {
+                    w1 = f(w1, mod - 2);
+                }
+
+                w = 1;
+                for (int i = 0; i < 2 * (1 << j); i++)
+                {
+                    St[i] = w;
+                    w *= w1; w %= mod;
+                }
+                for (int i = 0; i < n; i += (1 << (j + 1)))
+                {
+                    for (int s = i; s < i + (1 << j); s++)
+                    {
+                        x = A[s]; y = A[s + (1 << j)];
+                        A[s] = x + y * St[s - i]; A[s] %= mod;
+                        A[s + (1 << j)] = x + y * St[s - i + (1<<j)] + mod * mod; A[s + (1 << j)] %= mod;
+                    }
+                }
+            }
+            if (!normal)
+            {
+                int n2 = f(n, mod - 2);
+                for (int i = 0; i < n; i++)
+                {
+                    A[i] *= n2; A[i] %= mod;
+                }
+            }
+        }
+
+        //a0 + a1*x + a2*x^2+... могут быть отрицательныи=ми с запасом 2*mod*mod!!!
+        void Multiply(vector<int>& A, vector<int>& B, vector<int>& res)
+        {
+            int n = A.size() + B.size() - 1;
+            int k = log2Ceil(n);
+            n = (1 << k);
+
+            vector<int> AA(n, 0), BB(n, 0);
+            for (int i = 0; i < A.size(); i++)
+            {
+                AA[i] = (A[i]+mod*mod*2) % mod;
+            }
+            for (int i = 0; i < B.size(); i++)
+            {
+                BB[i] = (B[i] + mod * mod * 2) % mod;
+            }
+            fft(AA); fft(BB);
+            vector<int> R(n);
+            for (int i = 0; i < n; i++)
+            {
+                R[i] = AA[i] * BB[i]; R[i] %= mod;
+            }
+            fft(R, false);
+            res.resize(n);
+            for (int i = 0; i < n; i++)
+            {
+                res[i] = R[i];
+            }
+            for (int i = res.size() - 1; i >= 0; i--)
+            {
+                if (res[i] != 0)
+                {
+                    res.resize(i + 1); break;
+                }
+            }
+        }
+    };
+}
+
+
+
+using namespace FFT;
