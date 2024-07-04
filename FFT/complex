@@ -95,4 +95,40 @@ namespace FFT {
             }
         }
     }
+
+    void GetValues(vector<int>& A, vector<Complex>& res, int resdeg)
+    {
+        int n = resdeg + 1;
+        int k = log2Ceil(n);
+        n = (1 << k);
+        res.resize(n);
+        for (int i = 0; i < A.size(); i++)
+        {
+            res[i] = A[i];
+        }
+        fft(res);
+    }
+
+    void GetPolynom(vector<Complex>& A, vector<int>& res, int resdeg)
+    {
+        int n = resdeg + 1;
+        int k = log2Ceil(n);
+        n = (1 << k);
+        fft(A, false);
+
+        res.resize(n);
+        for (int i = 0; i < n; i++)
+        {
+            res[i] = round(A[i].real());
+        }
+        for (int i = res.size() - 1; i >= 0; i--)
+        {
+            if (res[i] != 0)
+            {
+                res.resize(i + 1); break;
+            }
+        }
+    }
 }
+
+using namespace FFT;
