@@ -16,12 +16,11 @@ namespace FFT {
     unsigned long long log2Ceil(unsigned long long n) { return (unsigned long long)64 - std::countl_zero<unsigned long long>(n - 1); }
 
     struct fft_modular {
-        fft_modular(int mod,int w0,int MAX_ST)
-        : mod(mod)
-        , w0(w0)
-        , MAX_ST(MAX_ST){}
+        fft_modular(int mod, int w0, int MAX_ST)
+            : mod(mod)
+            , w0(w0)
+            , MAX_ST(MAX_ST) {}
 
-        // [0;4)
         fft_modular(int template_index)
         {
             switch (template_index)
@@ -51,7 +50,6 @@ namespace FFT {
                 MAX_ST = 25;
             }break;
             default:
-                throw "wrong fft index";
                 break;
             }
         }
@@ -115,7 +113,7 @@ namespace FFT {
                     {
                         x = A[s]; y = A[s + (1 << j)];
                         A[s] = x + y * St[s - i]; A[s] %= mod;
-                        A[s + (1 << j)] = x + y * St[s - i + (1<<j)] + mod * mod; A[s + (1 << j)] %= mod;
+                        A[s + (1 << j)] = x + y * St[s - i + (1 << j)] + mod * mod; A[s + (1 << j)] %= mod;
                     }
                 }
             }
@@ -129,6 +127,9 @@ namespace FFT {
             }
         }
 
+        
+
+
         //a0 + a1*x + a2*x^2+... могут быть отрицательныи=ми с запасом 2*mod*mod!!!
         void Multiply(vector<int>& A, vector<int>& B, vector<int>& res)
         {
@@ -139,7 +140,7 @@ namespace FFT {
             vector<int> AA(n, 0), BB(n, 0);
             for (int i = 0; i < A.size(); i++)
             {
-                AA[i] = (A[i]+mod*mod*2) % mod;
+                AA[i] = (A[i] + mod * mod * 2) % mod;
             }
             for (int i = 0; i < B.size(); i++)
             {
@@ -156,6 +157,41 @@ namespace FFT {
             for (int i = 0; i < n; i++)
             {
                 res[i] = R[i];
+            }
+            for (int i = res.size() - 1; i >= 0; i--)
+            {
+                if (res[i] != 0)
+                {
+                    res.resize(i + 1); break;
+                }
+            }
+        }
+
+        void GetValues(vector<int>& A, vector<int>& res, int resdeg)
+        {
+            int n = resdeg + 1;
+            int k = log2Ceil(n);
+            n = (1 << k);
+
+            res.resize(n, 0);
+            for (int i = 0; i < A.size(); i++)
+            {
+                res[i] = (A[i] + mod * mod * 2) % mod;
+            }
+            fft(res);
+        }
+
+        void GetPolynom(vector<int>& A, vector<int>& res, int resdeg)
+        {
+            int n = resdeg + 1;
+            int k = log2Ceil(n);
+            n = (1 << k);
+            fft(A, false);
+
+            res.resize(n);
+            for (int i = 0; i < n; i++)
+            {
+                res[i] = A[i];
             }
             for (int i = res.size() - 1; i >= 0; i--)
             {
