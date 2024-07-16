@@ -2,12 +2,12 @@ namespace GrapfAero {
     vector<int> R1, R2;
     bool e = false;
 };
-
+//remember about N!!!!!!!!!!!!!
 struct Hashing {
     
     static const int mod1 = 1e9 + 7, k1 = 31;
     static const int mod2 = 1e9 + 9, k2 = 37;
-    static const int N = 2e5;
+    static const int N = 2e5;//!!!!!!!!!!!!!!!!
     
     vector<pair<int, int>> pref;
     Hashing(string& S)
