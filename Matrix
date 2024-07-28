@@ -3,6 +3,7 @@ namespace Matrix {
     struct Matrix {
         int n, m;
         vector<vector<int>> M;
+        Matrix() = default;
         Matrix(int n, int m)
         {
             this->n = n;
@@ -25,6 +26,7 @@ namespace Matrix {
             return M[index];
         }
     };
+
     //Без проверки на правильность размерностей
     Matrix multiply(Matrix& a, Matrix& b)
     {
@@ -36,16 +38,20 @@ namespace Matrix {
             {
                 for (int k = 0; k < m; k++)
                 {
-                    res[i][j] += a[i][k] * b[k][j]; res[i][j] %= mod;
+                    res.M[i][j] += a.M[i][k] * b.M[k][j]; res.M[i][j] %= mod;
                 }
             }
         }
         return res;
     }
 
-    //Квадратные матрицы!!!
-    Matrix binpow(Matrix& a, int st)
+    //Квадратные матрицы!!!; можно убрать копирование, если возможно
+    Matrix binpow(Matrix a, int st)
     {
+        if (st == 0)
+        {
+            return Matrix(a.n);
+        }
         Matrix res = Matrix(a.n);
         while (st)
         {
@@ -55,4 +61,40 @@ namespace Matrix {
         }
         return res;
     }
-};
+
+    //Только для матрицы 2x2
+    int det(Matrix& a)
+    {
+        return (a.M[0][0] * a.M[1][1] - a.M[1][0] * a.M[0][1] + mod * mod) % mod;
+    }
+    int f(int a, int st = mod - 2)
+    {
+        int res = 1;
+        while (st)
+        {
+            if (st & 1) { res = (res * a) % mod; }
+            a = (a * a) % mod;
+            st >>= 1;
+        }
+        return res;
+    }
+    //Только для матрицы 2x2 - обратная матрица
+    Matrix inverse(Matrix& a)
+    {
+        Matrix res(2, 2);
+        int d = det(a);
+        d = f(d, mod - 2); //обратное число по модулю
+        res.M[0][0] = a.M[1][1] * d;
+        res.M[1][1] = a.M[0][0] * d;
+        res.M[0][1] = (mod - a.M[0][1]) * d;
+        res.M[1][0] = (mod - a.M[1][0]) * d;
+        for (int i = 0; i < 2; i++)
+        {
+            for (int j = 0; j < 2; j++)
+            {
+                res.M[i][j] %= mod;
+            }
+        }
+        return res;
+    }
+}
