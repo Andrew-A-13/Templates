@@ -1,0 +1,24 @@
+//Граф ощищает все рёбра вошедшие в цикл!
+vector<int> euler(vector<multiset<int>>& Gr, int st)
+{
+    vector<int> res;
+    vector<int> stack; stack.push_back(st);
+    int index, next;
+    while (!stack.empty())
+    {
+        index = stack.back();
+        if (Gr[index].size() == 0)
+        {
+            res.push_back(index);
+            stack.pop_back();
+        }
+        else
+        {
+            next = *Gr[index].begin();
+            Gr[index].erase(Gr[index].find(next));
+            Gr[next].erase(Gr[next].find(index));
+            stack.push_back(next);
+        }
+    }
+    return res;
+}
