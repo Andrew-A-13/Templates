@@ -1,0 +1,64 @@
+struct MergeSortTree {
+    int st = 0;
+    vector<vector<int>> tree;
+    const int neutral = 0;
+    void build(vector<int>& A)
+    {
+        int n = A.size();
+        while ((1LL << st) < n)st++;
+        tree.resize((1LL << (st + 1)));
+        /*while (A.size() != (1 << st))
+        {
+            A.push_back(neutral);
+        }*/
+        for (int i = (1 << st); i < (1 << st)+n; i++)
+        {
+            tree[i].push_back(A[i - (1 << st)]);
+        }
+        int cur_st = st - 1;
+        int p, q;
+        while (cur_st >= 0)
+        {
+            for (int i = (1 << cur_st); i < (1 << cur_st) * 2; i++)
+            {
+                p = q = 0;
+                while (p != tree[2 * i].size() && q != tree[2 * i + 1].size())
+                {
+                    if (tree[2 * i][p] <= tree[2 * i + 1][q])
+                    {
+                        tree[i].push_back(tree[2 * i][p]); p++;
+                    }
+                    else
+                    {
+                        tree[i].push_back(tree[2 * i + 1][q]); q++;
+                    }
+                }
+                while (p != tree[2 * i].size())
+                {
+                    tree[i].push_back(tree[2 * i][p]); p++;
+                }
+                while (q != tree[2 * i + 1].size())
+                {
+                    tree[i].push_back(tree[2 * i + 1][q]); q++;
+                }
+            }
+            cur_st--;
+        }
+    }
+    vector<int>::iterator it;
+
+    // число элементов строго больше x, в [l;r)
+    int getCntMore(int l, int r, int x, int index = 1, int cur_st = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (RR <= l || r <= LL)
+            return 0;
+        if (l <= LL && RR <= r)
+        {
+            it = upper_bound(tree[index].begin(), tree[index].end(), x);
+            return tree[index].end() - it;
+        }
+        return getCntMore(l, r, x, index * 2, cur_st + 1) + getCntMore(l, r, x, index * 2 + 1, cur_st + 1);
+    }
+};
