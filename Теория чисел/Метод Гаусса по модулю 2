@@ -1,0 +1,65 @@
+namespace Gauss {
+    // работает только для mod = 2
+    // для другого модуля нужно сделать add: A -> A + B*const(**)
+    // и не забыть деление на числа обратные по модулю в меcте (*)
+    int mod = 2;
+
+    void add(vector<int>& A, const vector<int>& add)
+    {
+        for (int i = 0; i < A.size(); i++)
+        {
+            A[i] = (A[i] + add[i]) % mod;
+        }
+    }
+
+    //принимает систему ур-й m*(n+1): i-e: x_0*a_i_0+...+x_n-1*a_i_n-1=b_i
+    //если нет решений вернёт vector<int>(n,-1)
+    vector<int> Gauss(vector<vector<int>>& S)
+    {
+        int m = S.size(); int n = S[0].size() - 1;
+        vector<int> ans(n, 0);
+        int j = 0;
+
+        for (int i = 0; i < n; i++)
+        {
+            int f = -1;
+            for (int k = j; k < m; k++)
+            {
+                if (S[k][i] == 1)
+                {
+                    f = k; break;
+                }
+            }
+            if (f == -1)continue;
+            swap(S[j], S[f]);
+            //(*)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            for (int k = 0; k < m; k++)
+            {
+                if (k == j) continue;
+                if (S[k][i] == 1)
+                {
+                    add(S[k], S[j]); //(**)!!!!!!!!!!!!!!!!!!!!!!!!!!
+                }
+            }
+            j++;
+        }
+        for (int i = 0; i < m; i++)
+        {
+            int f = -1;
+            for (int j = 0; j <= n; j++)
+            {
+                if (S[i][j] == 1)
+                {
+                    f = j; break;
+                }
+            }
+            if (f == n)
+            {
+                return vector<int>(n, -1);
+            }
+            if (f == -1)continue;
+            ans[f] = S[i][n];
+        }
+        return ans;
+    }
+};
