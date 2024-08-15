@@ -25,7 +25,7 @@ using namespace std;
 
 #define endl '\n'
 #define Endl '\n'
-//#define all(v) (v).begin(), (v).end()
+#define all(v) (v).begin(), (v).end()
 //#define res(a, n) a.clear(); a.resize(n);
 //#define ress(a, n, b) a.clear(); a.resize(n, b); 
 #define int long long
