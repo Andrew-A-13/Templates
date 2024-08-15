@@ -1,9 +1,5 @@
 struct querry {
     int l, r, x;
-    bool operator<(querry o)
-    {
-        return x > o.x;
-    }
 };
 
 
