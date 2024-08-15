@@ -1,0 +1,92 @@
+struct querry {
+    int l, r, x;
+    bool operator<(querry o)
+    {
+        return x > o.x;
+    }
+};
+
+
+
+struct MergeSortTreeLess {
+    //Немного изменённое дерево Фенвика
+    struct FTree {
+        vector<int> tree;
+        void upd(int index, int x)
+        {
+            while (index < tree.size())
+            {
+                tree[index] += x;
+                index |= index + 1;
+            }
+        }
+
+        void build(const vector<int>& A)
+        {
+            tree.resize(A.size(), 0);
+        }
+
+        int get(int r)
+        {
+            int index = r;
+            int ans = 0;
+            while (index >= 0)
+            {
+                ans += tree[index];
+                index = (index & (index + 1)) - 1;
+            }
+            return ans;
+        }
+
+        int get(int l, int r)
+        {
+            if (l >= r)return 0;
+            return get(r - 1) - get(l - 1);
+        }
+    };
+    vector<int> base;
+    vector<pair<int, int>> All;
+    void build(vector<int>& A)
+    {
+        base.resize(A.size());
+        set<pair<int, int>> All1;
+        for (int i = 0; i < A.size(); i++) {
+            base[i] = A[i]; All1.insert({ A[i],i });
+        }
+        for (auto x : All1)
+        {
+            All.push_back(x);
+        }
+    }
+    struct local_querry {
+        int l, r, x, i;
+        bool operator<(local_querry o)
+        {
+            return x < o.x;
+        }
+    };
+    //кол-во чисел <=x из [l;r); l>=r вернёт 0; Q при этом не изменяется
+    vector<int> Get(vector<querry>& Q)
+    {
+        vector<local_querry> W(Q.size());
+        for (int i = 0; i < Q.size(); i++)
+        {
+            W[i] = { Q[i].l,Q[i].r,Q[i].x,i };
+        }
+        sort(W.begin(), W.end());
+        vector<int> ans(Q.size());
+        FTree T; T.build(vector<int>(base.size(), 0));
+
+        int j = 0;
+        for (auto [l, r, x, i] : W)
+        {
+            while (j != All.size() && All[j].first <= x)
+            {
+                auto [v, index] = All[j]; j++;
+                T.upd(index, 1);
+            }
+            ans[i] = T.get(l, r);
+        }
+        return ans;
+    }
+};
