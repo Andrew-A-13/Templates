@@ -1,17 +1,35 @@
 namespace Gauss {
-    // работает только для mod = 2
-    // для другого модуля нужно сделать add: A -> A + B*const(**)
-    // и не забыть деление на числа обратные по модулю в меcте (*)
-    int mod = 2;
-
-    void add(vector<int>& A, const vector<int>& add)
+    // работает только для mod
+    int mod = 998244353;
+ 
+    int ff(int a, int st = mod - 2)
+    {
+        int res = 1;
+        while (st)
+        {
+            if (st & 1) { res = (res * a) % mod; }
+            a = (a * a) % mod;
+            st >>= 1;
+        }
+        return res;
+    }
+ 
+    void add(vector<int>& A, const vector<int>& add, int C)
     {
         for (int i = 0; i < A.size(); i++)
         {
-            A[i] = (A[i] + add[i]) % mod;
+            A[i] = (A[i] + add[i] * C) % mod;
         }
     }
-
+ 
+    void multiply(vector<int>& A, int C)
+    {
+        for (int i = 0; i < A.size(); i++)
+        {
+            A[i] = (A[i] * C) % mod;
+        }
+    }
+ 
     //принимает систему ур-й m*(n+1): i-e: x_0*a_i_0+...+x_n-1*a_i_n-1=b_i
     //если нет решений вернёт vector<int>(n,-1)
     vector<int> Gauss(vector<vector<int>>& S)
@@ -19,26 +37,26 @@ namespace Gauss {
         int m = S.size(); int n = S[0].size() - 1;
         vector<int> ans(n, 0);
         int j = 0;
-
+ 
         for (int i = 0; i < n; i++)
         {
             int f = -1;
             for (int k = j; k < m; k++)
             {
-                if (S[k][i] == 1)
+                if (S[k][i] != 0)
                 {
                     f = k; break;
                 }
             }
             if (f == -1)continue;
             swap(S[j], S[f]);
-            //(*)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            multiply(S[j], ff(S[j][i]));
             for (int k = 0; k < m; k++)
             {
                 if (k == j) continue;
-                if (S[k][i] == 1)
+                if (S[k][i] != 0)
                 {
-                    add(S[k], S[j]); //(**)!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    add(S[k], S[j], mod - S[k][i]);
                 }
             }
             j++;
