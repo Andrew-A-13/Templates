@@ -1,0 +1,16 @@
+namespace std {
+    template <>
+    struct hash<vector<int>> {
+        int mod = 1e9 + 7;
+        int k;
+        size_t operator()(const vector<int>& A) const
+        {
+            size_t res = 0;
+            for (auto x : A)
+            {
+                res *= k; res += x + 1; res %= mod;
+            }
+            return res;
+        }
+    };
+};
