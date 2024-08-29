@@ -1,0 +1,77 @@
+namespace GrapfAero {
+    vector<int> R1, R2;
+    bool e = false;
+};
+//remember about N!!!!!!!!!!!!!
+struct Hashing {
+ 
+    static const int mod1 = 469762049, k1 = 31;
+    static const int mod2 = 1200720071, k2 = 37;
+    static const int N = 2e6 + 5;//!!!!!!!!!!!!!!!!
+ 
+    vector<pair<int, int>> pref, Rpref;
+ 
+    Hashing(string& S)
+    {
+        if (!GrapfAero::e)
+        {
+            GrapfAero::e = true;
+            GrapfAero::R1.resize(N); GrapfAero::R2.resize(N);
+            GrapfAero::R1[0] = GrapfAero::R2[0] = 1;
+            for (int i = 1; i < N; i++)
+            {
+                GrapfAero::R1[i] = (GrapfAero::R1[i - 1] * k1) % mod1;
+                GrapfAero::R2[i] = (GrapfAero::R2[i - 1] * k2) % mod2;
+            }
+        }
+        int n = S.size();
+        pref.resize(n);
+        pair<int, int> h = { 0,0 };
+        for (int i = 0; i < n; i++)
+        {
+            h.first *= k1; h.second *= k2;
+            h.first += S[i] - 'a' + 1; h.second += S[i] - 'a' + 1;
+            h.first %= mod1; h.second %= mod2;
+            pref[i] = h;
+        }
+        reverse(all(S));
+        Rpref.resize(n);
+        pair<int, int> h2 = { 0,0 };
+        for (int i = 0; i < n; i++)
+        {
+            h2.first *= k1; h2.second *= k2;
+            h2.first += S[i] - 'a' + 1; h2.second += S[i] - 'a' + 1;
+            h2.first %= mod1; h2.second %= mod2;
+            Rpref[i] = h2;
+        }
+        reverse(all(S));
+    }
+ 
+    // [l;r) от 0 до n
+    pair<int, int> get(int l, int r)
+    {
+        if (l == r)return { 0,0 };
+        pair<int, int> h1 = pref[r - 1];
+        pair<int, int> h2 = (l != 0 ? pref[l - 1] : make_pair<int, int>(0, 0));
+        pair<int, int> h = h1;
+        h.first -= h2.first * GrapfAero::R1[r - l] - mod1 * mod1; h.first %= mod1;
+        h.second -= h2.second * GrapfAero::R2[r - l] - mod2 * mod2; h.second %= mod2;
+        return h;
+    }
+    pair<int, int> Rget(int l, int r)
+    {
+        if (l == r)return { 0,0 };
+        l = pref.size() - l; r = pref.size() - r; swap(l, r);
+        pair<int, int> h1 = Rpref[r - 1];
+        pair<int, int> h2 = (l != 0 ? Rpref[l - 1] : make_pair<int, int>(0, 0));
+        pair<int, int> h = h1;
+        h.first -= h2.first * GrapfAero::R1[r - l] - mod1 * mod1; h.first %= mod1;
+        h.second -= h2.second * GrapfAero::R2[r - l] - mod2 * mod2; h.second %= mod2;
+        return h;
+    }
+    bool IsPal(int l, int r)
+    {
+        if (l == r)return true;
+        return get(l, r) == Rget(l, r);
+    }
+};
