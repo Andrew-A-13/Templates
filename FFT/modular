@@ -12,6 +12,7 @@ namespace FFT {
     //prime : 167772161 = 5·2 ^ 25 + 1; w: 17 (w^ { 2 ^ 25 } ≡ 1)
     //prime : 469762049 = 7·2 ^ 26 + 1; w: 30 (w^ { 2 ^ 26 } ≡ 1)
     //prime : 998244353 = 119·2 ^ 23 + 1; w: 31 (w^ { 2 ^ 23 } ≡ 1)
+
     unsigned long long log2Floor(unsigned long long n) { return (unsigned long long)63 - std::countl_zero<unsigned long long>(n); }
     unsigned long long log2Ceil(unsigned long long n) { return (unsigned long long)64 - std::countl_zero<unsigned long long>(n - 1); }
 
@@ -127,11 +128,11 @@ namespace FFT {
             }
         }
 
-        
+
 
 
         //a0 + a1*x + a2*x^2+... могут быть отрицательныи=ми с запасом 2*mod*mod!!!
-        void Multiply(vector<int>& A, vector<int>& B, vector<int>& res)
+        void Multiply(const vector<int>& A, const vector<int>& B, vector<int>& res)
         {
             int n = A.size() + B.size() - 1;
             int k = log2Ceil(n);
@@ -200,6 +201,38 @@ namespace FFT {
                     res.resize(i + 1); break;
                 }
             }
+        }
+
+        //A[0] != 0!
+        void GetInverseMain(vector<int>& A, vector<int>& res, int resdeg)
+        {
+            int st = 0;
+            while ((1 << st) < resdeg) st++;
+            A.resize((1 << st));
+            res.resize((1 << st));
+            res[0] = f(A[0], mod - 2);
+            vector<int> ans0, B0, B1, R, R2, R3, ans1;
+            for (int n = 1; n < A.size(); n *= 2)
+            {
+                ans0.resize(n); B0.resize(n); B1.resize(n); R3.resize(n);
+                for (int i = 0; i < n; i++)
+                {
+                    B0[i] = A[i]; B1[i] = A[i + n]; ans0[i] = res[i];
+                }
+                Multiply(B0, ans0, R); R.resize(2 * n);
+                Multiply(B1, ans0, R2); R2.resize(n);
+                for (int i = 0; i < n; i++)
+                {
+                    //Y[i] = R[i + n];
+                    R3[i] = (mod * 2 - R[i + n] - R2[i]) % mod;
+                }
+                Multiply(R3, ans0, ans1); ans1.resize(2 * n);
+                for (int i = n; i < 2 * n; i++)
+                {
+                    res[i] = ans1[i - n];
+                }
+            }
+            res.resize(resdeg);
         }
     };
 }
