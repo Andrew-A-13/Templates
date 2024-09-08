@@ -1,0 +1,22 @@
+vector<int> zfunc(const string& S)
+{
+    int n = S.size();
+    vector<int> z(n, 0);
+    int l = 0, r = 1;
+    for (int i = 1; i < n; i++)
+    {
+        if (i < r)
+        {
+            z[i] = min(z[i - l], r - i);
+        }
+        while (i + z[i] < n && S[i + z[i]] == S[z[i]])
+        {
+            z[i]++;
+        }
+        if (i + z[i] > r)
+        {
+            r = i + z[i], l = i;
+        }
+    }
+    return z;
+}
