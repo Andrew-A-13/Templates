@@ -1,0 +1,17 @@
+vector<int> pfunc(const string& S)
+{
+    int n = S.size();
+    vector<int> p(n, 0);
+    int k;
+    for (int i = 1; i < n; i++)
+    {
+        int k = p[i - 1];
+        while (S[i] != S[k] && k > 0)
+        {
+            k = p[k - 1];
+        }
+        if (S[i] == S[k])k++;
+        p[i] = k;
+    }
+    return p;
+}
