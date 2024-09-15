@@ -1,0 +1,229 @@
+struct Treap {
+
+	static int GeneratePriority()
+	{
+		static mt19937 Generator(42);
+		return uniform_int_distribution<int>()(Generator);
+	}
+
+	struct field {
+		int left, right;
+		int prior, size;
+		int l, r;
+		int sum;
+		int el_size;
+		field() {
+
+		}
+		field(int l, int r)
+			:l(l), r(r)
+		{
+			left = right = -1;
+			size = 1;
+			el_size = sum = r - l + 1;
+			prior = Treap::GeneratePriority();
+		}
+	};
+	vector<field> tree;
+	int Root = -1;
+
+	void push(int index)
+	{
+		// Возможны любые случаи
+		//if(index=--1) ...
+		/*if (tree[index].mul != 1)
+		{
+			int t = tree[index].mul;
+			if (tree[index].left != -1)
+			{
+				tree[tree[index].left].mul *= t; tree[tree[index].left].mul %= mod;
+				tree[tree[index].left].sum *= t; tree[tree[index].left].sum %= mod;
+			}
+			if (tree[index].right != -1)
+			{
+				tree[tree[index].right].mul *= t; tree[tree[index].right].mul %= mod;
+				tree[tree[index].right].sum *= t; tree[tree[index].right].sum %= mod;
+			}
+			tree[index].data *= t; tree[index].data %= mod;
+			tree[index].mul = 1;
+		}*/
+	}
+
+	void re(int index)
+	{
+		int ans = 1;
+		if (tree[index].left != -1)
+		{
+			ans += tree[tree[index].left].size;
+		}
+		if (tree[index].right != -1)
+		{
+			ans += tree[tree[index].right].size;
+		}
+		tree[index].size = ans;
+		////////////////////////////////// More:
+		tree[index].sum = tree[index].el_size;
+		if (tree[index].left != -1)
+		{
+			tree[index].sum += tree[tree[index].left].sum;
+		}
+		if (tree[index].right != -1)
+		{
+			tree[index].sum += tree[tree[index].right].sum;
+		}
+	}
+
+	int Merge(int l, int r)
+	{
+		if (l == -1)
+			return r;
+		if (r == -1)
+			return l;
+		push(l); push(r);
+		/*if (tree[l].mul != 1)
+		{
+			push(l);
+		}
+		if (tree[r].mul != 1)
+		{
+			push(l);
+		}*/
+		if (tree[l].prior >= tree[r].prior)
+		{
+			tree[l].right = Merge(tree[l].right, r);
+			re(l);
+			return l;
+		}
+		else
+		{
+			tree[r].left = Merge(l, tree[r].left);
+			re(r);
+			return r;
+		}
+	}
+
+	pair<int, int> Split(int index, int key)
+	{
+		if (index == -1)
+			return { -1,-1 };
+		if (tree[index].left == -1)
+		{
+			if (key == 0)
+			{
+				return { -1,index };
+			}
+			auto [L, R] = Split(tree[index].right, key - 1);
+			tree[index].right = L;
+			re(index);
+			return { index,R };
+		}
+		if (tree[tree[index].left].size < key)
+		{
+			auto [RL, RR] = Split(tree[index].right, key - 1 - tree[tree[index].left].size);
+			tree[index].right = RL;
+			re(index);
+			return{ index,RR };
+		}
+		else
+		{
+			auto [LL, LR] = Split(tree[index].left, key);
+			tree[index].left = LR;
+			re(index);
+			return{ LL,index };
+		}
+	}
+
+	// Добавить элемент в конец
+	void InsertBack(int l, int r)
+	{
+		tree.push_back(field(l, r));
+		Root = Merge(Root, tree.size() - 1);
+	}
+
+	/*void Swap(int l1, int r1, int l2, int r2)
+	{
+		auto [T4, R] = Split(Root, r2);
+		auto [T3, B2] = Split(T4, l2);
+		auto [T2, M] = Split(T3, r1);
+		auto [L, B1] = Split(T2, l1);
+		Root = Merge(L, B2);
+		Root = Merge(Root, M);
+		Root = Merge(Root, B1);
+		Root = Merge(Root, R);
+	}*/
+
+	//int restSum;
+	
+	// Удалить по ключу
+	pair<int, int> del(int key)
+	{
+		auto [T, R] = Split(Root, key + 1);
+		auto [L, E] = Split(T, key);
+		/*if (L != -1) {
+			restSum = tree[L].sum;
+		}*/
+		Root = Merge(L, R);
+		return { tree[E].l,tree[E].r };
+	}
+
+	// Добавить по ключу
+	void add(int l, int r, int key)
+	{
+		auto [L, R] = Split(Root, key);
+		tree.push_back(field(l, r));
+		L = Merge(L, tree.size() - 1);
+		Root = Merge(L, R);
+	}
+
+	int position;
+	// Получить ключ элемента под номером num, считаются все элементы отрезков;
+	// position - начиная с 0 позиция элемент в отрезке; index = T.Root;
+	int getkey(int num, int index)
+	{
+		int ans = 0;
+		if (tree[index].left != -1 && tree[tree[index].left].sum > num)
+		{
+			return getkey(num, tree[index].left);
+		}
+		if (tree[index].left != -1)
+		{
+			num -= tree[tree[index].left].sum;
+			ans += tree[tree[index].left].size;
+		}
+		if (tree[index].el_size > num)
+		{
+			position = num;
+			return ans;
+		}
+		num -= tree[index].el_size;
+		return ans + 1 + getkey(num, tree[index].right);
+	}
+
+	/*void Mul(int l, int r, int x)
+	{
+		auto [T, R] = Split(Root, r);
+		auto [L, M] = Split(T, l);
+		tree[M].mul *= x; tree[M].mul %= mod;
+		tree[M].sum *= x; tree[M].sum %= mod;
+		Root = Merge(L, M);
+		Root = Merge(Root, R);
+	}*/
+
+	/*int Sum(int l, int r)
+	{
+		auto [T, R] = Split(Root, r);
+		auto [L, M] = Split(T, l);
+		int ans = tree[M].sum;
+		Root = Merge(L, M);
+		Root = Merge(Root, R);
+		return ans;
+	}*/
+	void print(int index)
+	{
+		if (index == -1)
+			return;
+		print(tree[index].left);
+		cout << tree[index].l << " " << tree[index].r << Endl;
+		print(tree[index].right);
+	}
+};
