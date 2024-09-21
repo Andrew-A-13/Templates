@@ -1,0 +1,104 @@
+struct Aho {
+    static const int N = 26;
+    vector<vector<int>> next;
+    vector<vector<int>> terminal;
+    vector<int> link;
+    vector<int> up;
+    int mx = 0;
+    Aho()
+    {
+        node();
+    }
+
+    vector<int> order;
+
+    int node()
+    {
+        next.emplace_back(vector<int>(N, 0));
+        terminal.emplace_back();
+        link.emplace_back(0);
+        up.emplace_back();
+        return mx++;
+    }
+    void add(string& S, int i)
+    {
+        int v = 0;
+        for (auto s : S)
+        {
+            if (next[v][s - 'a'] == 0)next[v][s - 'a'] = node();
+            v = next[v][s - 'a'];
+        }
+        terminal[v].push_back(i);
+    }
+
+    void build()
+    {
+        int I = 0; order.push_back(0);
+        while (I != order.size())
+        {
+            int index = order[I];
+            for (int i = 0; i < N; i++)
+            {
+                int child = next[index][i];
+                if (child != 0) {
+                    if (index != 0) {
+                        link[child] = next[link[index]][i];
+                    }
+                    else
+                    {
+                        link[child] = 0;
+                    }
+                    order.push_back(child);
+                }
+                else
+                {
+                    next[index][i] = next[link[index]][i];
+                }
+                if (terminal[link[index]].size() != 0)
+                {
+                    up[index] = link[index];
+                }
+                else
+                {
+                    up[index] = up[link[index]];
+                }
+            }
+            I++;
+        }
+    }
+    vector<vector<int>> was;
+    void use(string& T)
+    {
+        was.resize(mx);
+        int v = 0;
+
+        int pos = 0;
+        for (auto s : T)
+        {
+            v = next[v][s - 'a'];
+            int u = v;
+            was[u].push_back(pos);
+            do {
+                u = up[u];
+                was[u].push_back(pos);
+            } while (up[u] != 0);
+            pos++;
+        }
+    }
+
+    vector<vector<int>> get_info(int k)
+    {
+        vector<vector<int>> ans(k);
+        for (int i = order.size() - 1; i >= 0; i--)
+        {
+            int index = order[i];
+            for (auto in : terminal[index])
+            {
+                for (auto pos : was[index]) {
+                    ans[in].push_back(pos);
+                }
+            }
+        }
+        return ans;
+    }
+};
