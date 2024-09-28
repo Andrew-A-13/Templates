@@ -1,0 +1,106 @@
+#include<iostream>
+#include<vector>
+#include<set>
+#include<map>
+#include<algorithm>
+#include<climits>
+#include<cmath>
+#include<numeric>
+#include<string>
+#include<ctime>
+#include<stdlib.h>
+#include<queue>
+#include<bit>
+#include<unordered_set>
+#include<random>
+
+
+using namespace std;
+
+//#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+//#pragma GCC optimize("O3")
+//#pragma GCC optimize("unroll-loops")
+
+
+#define endl '\n'
+#define int long long
+
+vector<vector<int>> Gr;
+vector<bool> used;
+vector<int> Size;
+
+void sizes(int index, int p)
+{
+    Size[index] = 1;
+    for (auto u : Gr[index])
+    {
+        if (u == p || used[u])
+            continue;
+        sizes(u, index);
+        Size[index] += Size[u];
+    }
+}
+
+int centroid(int x, int p, int n)
+{
+    for (auto u : Gr[x])
+    {
+        if (u == p || used[u])
+            continue;
+        if (Size[u] >= n / 2)
+            return centroid(u, x, n);
+    }
+    return x;
+}
+
+vector<char> ans;
+
+void decompose(int u, char t)
+{
+    ans[u] = t;
+    used[u] = true;
+    for (auto x : Gr[u])
+    {
+        if (used[x])
+            continue;
+        sizes(x, u);
+        decompose(centroid(x, u, Size[x]), t + 1);
+    }
+}
+
+void solve()
+{
+    int n; cin >> n;
+    ans.resize(n);
+    Size.resize(n);
+    used.resize(n, false);
+    Gr.resize(n);
+    int u, v;
+    for (int i = 0; i < n - 1; i++)
+    {
+        cin >> u >> v; u--, v--;
+        Gr[u].push_back(v);
+        Gr[v].push_back(u);
+    }
+    sizes(0, 0);
+    decompose(centroid(0, 0, n), 'A');
+    for (auto x : ans)
+    {
+        cout << x << " ";
+    }cout << endl;
+
+}
+
+
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int t; t = 1;
+    for (int u = 0; u < t; u++)
+    {
+        solve();
+    }
+    return 0;
+}
