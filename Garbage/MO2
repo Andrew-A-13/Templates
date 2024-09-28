@@ -1,0 +1,188 @@
+#include<iostream>
+#include<vector>
+#include<set>
+#include<map>
+#include<algorithm>
+#include<climits>
+#include<cmath>
+#include<numeric>
+#include<string>
+#include<ctime>
+#include<stdlib.h>
+#include<queue>
+#include<bit>
+#include<unordered_set>
+#include<unordered_map>
+#include<random>
+
+
+using namespace std;
+
+//#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+//#pragma GCC optimize("O3")
+//#pragma GCC optimize("unroll-loops")
+
+
+#define endl '\n'
+#define int long long
+
+vector<int> A, pref, suf;
+int K = sqrt(100000);
+
+struct querry {
+    int l, r, i;
+    bool operator<(querry other)
+    {
+        if (l / K != other.l / K)
+        {
+            return l < other.l;
+        }
+        if (r != other.r)
+        {
+            return r < other.r;
+        }
+        return i < other.i;
+    }
+};
+
+int k;
+
+int l = 0, r = 0;
+int answer = 0;
+vector<int> Allpref(1e6 + 1e5, 0), Allsuf(1e6 + 1e5, 0);
+
+void addRight(int i)
+{
+    int x = pref[i] ^ k;
+    answer += Allpref[x];
+    Allpref[pref[i]]++;
+    if (i + 1 != suf.size())
+    {
+        Allsuf[suf[i + 1]]++;
+    }
+    else
+    {
+        Allsuf[0]++;
+    }
+}
+
+void delRight(int i)
+{
+    Allpref[pref[i]]--;
+    if (i + 1 != suf.size())
+    {
+        Allsuf[suf[i + 1]]--;
+    }
+    else
+    {
+        Allsuf[0]--;
+    }
+    int x = pref[i] ^ k;
+    answer -= Allpref[x];
+}
+
+void addLeft(int i)
+{
+    int x = k ^ suf[i];
+    answer += Allsuf[x];
+    Allsuf[suf[i]]++;
+    if (i != 0)
+    {
+        Allpref[pref[i - 1]]++;
+    }
+    else
+    {
+        Allpref[0]++;
+    }
+}
+
+void delLeft(int i)
+{
+    Allsuf[suf[i]]--;
+    if (i != 0)
+    {
+        Allpref[pref[i - 1]]--;
+    }
+    else
+    {
+        Allpref[0]--;
+    }
+    int x = k ^ suf[i];
+    answer -= Allsuf[x];
+}
+
+
+void solve()
+{
+    Allpref[0] = 1;
+    int n, q; cin >> n >> q >> k;
+    A.resize(n);
+    pref.resize(n);
+    suf.resize(n);
+
+    for (int i = 0; i < n; i++)
+        cin >> A[i];
+    for (int i = 0; i < n; i++)
+    {
+        pref[i] = (i != 0 ? pref[i - 1] : 0) ^ A[i];
+    }
+    for (int i = n - 1; i >= 0; i--)
+    {
+        suf[i] = (i != n - 1 ? suf[i + 1] : 0) ^ A[i];
+    }
+    Allsuf[suf[0]]++;
+    vector<querry> Q(q);
+    for (int i = 0; i < q; i++)
+    {
+        int l, r;
+        cin >> l >> r; l--;
+        Q[i] = { l,r,i };
+    }
+    sort(Q.begin(), Q.end());
+
+    vector<int> ans(q);
+    for (int i = 0; i < q; i++)
+    {
+        while (r < Q[i].r)
+        {
+            addRight(r);
+            r++;
+        }
+        while (l > Q[i].l)
+        {
+            addLeft(l - 1); l--;
+        }
+        while (r > Q[i].r)
+        {
+            delRight(r - 1); r--;
+        }
+        while (l < Q[i].l)
+        {
+            delLeft(l); l++;
+        }
+        ans[Q[i].i] = answer;
+    }
+    for (auto x : ans)
+    {
+        cout << x << endl;
+    }
+
+
+
+
+
+}
+
+
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int t; t = 1;
+    for (int u = 0; u < t; u++)
+    {
+        solve();
+    }
+    return 0;
+}
