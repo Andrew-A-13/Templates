@@ -1,0 +1,238 @@
+#include<iostream>
+#include<vector>
+#include<set>
+#include<map>
+#include<algorithm>
+#include<climits>
+#include<cmath>
+#include<numeric>
+#include<string>
+#include<ctime>
+#include<stdlib.h>
+#include<queue>
+#include<bit>
+#include<unordered_set>
+#include<random>
+
+using namespace std;
+
+//#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+//#pragma GCC optimize("O3")
+//#pragma GCC optimize("unroll-loops")
+
+
+#define endl '\n'
+#define int long long
+
+struct SegTree {
+    struct field {
+        int sum = 0;
+        int add = 0;
+    };
+    vector<field> tree;
+    int st = 0;
+    void build(int n)
+    {
+        while ((1 << st) < n)
+            st++;
+        tree.resize((1 << st) * 2);
+    }
+    void push(int index, int cur_st)
+    {
+        if (cur_st == st)
+            return;
+        int t = tree[index].add;
+        if (t != 0)
+        {
+            tree[index].add = 0;
+            tree[2 * index].add += t;
+            tree[2 * index + 1].add += t;
+            tree[2 * index].sum += t * (1 << (st - cur_st - 1));
+            tree[2 * index + 1].sum += t * (1 << (st - cur_st - 1));
+        }
+    }
+    int get(int l, int r, int index = 1, int cur_st = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (r <= LL || RR <= l)
+            return 0;
+        if (l <= LL && RR <= r)
+            return tree[index].sum;
+        push(index, cur_st);
+        return get(l, r, index * 2, cur_st + 1) + get(l, r, index * 2 + 1, cur_st + 1);
+    }
+    void add(int l, int r, int s, int index = 1, int cur_st = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (r <= LL || RR <= l)
+            return;
+        if (l <= LL && RR <= r)
+        {
+            tree[index].add += s;
+            tree[index].sum += s * (1 << (st - cur_st));
+            return;
+        }
+        push(index, cur_st);
+        add(l, r, s, index * 2, cur_st + 1); add(l, r, s, index * 2 + 1, cur_st + 1);
+        tree[index].sum = tree[index * 2].sum + tree[2 * index + 1].sum;
+    }
+};
+
+vector<vector<int>> Gr;
+vector<int> Size;
+vector<int> tin, tout;
+vector<int> p, head;
+int t = 0;
+int base = 0;
+vector<int> Base;
+
+SegTree T;
+
+void dfs(vector<bool>& used, int index,int last)
+{
+    used[index] = true;
+    p[index] = last;
+    Size[index] = 1;
+    int Max = 0;
+    int INDEX = 0;
+    int x;
+    for (int i = 0; i < Gr[index].size(); i++)
+    {
+        x = Gr[index][i];
+        if (!used[x])
+        {
+            dfs(used, x, index);
+            Size[index] += Size[x];
+            if (Max < Size[x])
+            {
+                Max = Size[x];
+                INDEX = i;
+            }
+        }
+    }
+    swap(Gr[index][0], Gr[index][INDEX]);
+}
+
+void hld(int index, vector<bool>& used, int Head)
+{
+    Base[index] = base++;
+    tin[index] = t++;
+    used[index] = true;
+    head[index] = Head;
+    if (Gr[index].size() != 1 || index == 0)
+    {
+        hld(Gr[index][0], used, Head);
+        for (int i = 1; i < Gr[index].size(); i++)
+        {
+            if (!used[Gr[index][i]])
+            {
+                hld(Gr[index][i], used, Gr[index][i]);
+            }
+        }
+    }
+    tout[index] = t++;
+}
+
+bool IsAn(int u, int v)
+{
+    return tin[u] <= tin[v] && tout[v] <= tout[u];
+}
+
+int Get(int u, int v)
+{
+    int ans = 0;
+    while (!IsAn(head[u], v))
+    {
+        ans += T.get(Base[head[u]], Base[u] + 1);
+        u = p[head[u]];
+    }
+    swap(u, v);
+    while (!IsAn(head[u], v))
+    {
+        ans += T.get(Base[head[u]], Base[u] + 1);
+        u = p[head[u]];
+    }
+    if (IsAn(u, v))
+    {
+        swap(u, v);
+    }
+    ans += T.get(Base[v], Base[u] + 1);
+    return ans;
+}
+
+void Add(int u, int v, int x)
+{
+    while (!IsAn(head[u], v))
+    {
+        T.add(Base[head[u]], Base[u] + 1, x);
+        u = p[head[u]];
+    }
+    swap(u, v);
+    while (!IsAn(head[u], v))
+    {
+        T.add(Base[head[u]], Base[u] + 1, x);
+        u = p[head[u]];
+    }
+    if (IsAn(u, v))
+    {
+        swap(u, v);
+    }
+    T.add(Base[v], Base[u] + 1, x);
+}
+
+void solve()
+{
+    int n, q; cin >> n >> q;
+    Gr.resize(n);
+    T.build(n);
+    int u, v;
+    for (int i = 1; i < n; i++)
+    {
+        cin >> u >> v; u--, v--;
+        Gr[u].push_back(v);
+        Gr[v].push_back(u);
+    }
+    vector<bool> used(n, false);
+
+    Size.resize(n);
+    tin.resize(n);
+    tout.resize(n);
+    Base.resize(n);
+    p.resize(n);
+    head.resize(n);
+    dfs(used, 0, 0);
+
+    for (int i = 0; i < n; i++)
+        used[i] = false;
+
+    hld(0, used, 0);
+
+    int a, b, c, d;
+    for (int i = 0; i < q; i++)
+    {
+        cin >> a >> b >> c >> d; a--, b--, c--, d--;
+        Add(a, b, 1);
+        cout << Get(c, d) << endl;
+        Add(a, b, -1);
+    }
+
+
+
+
+}
+
+
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int t; t = 1;
+    for (int u = 0; u < t; u++)
+    {
+        solve();
+    }
+    return 0;
+}
