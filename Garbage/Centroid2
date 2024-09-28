@@ -1,0 +1,211 @@
+#include<iostream>
+#include<vector>
+#include<set>
+#include<map>
+#include<algorithm>
+#include<climits>
+#include<cmath>
+#include<numeric>
+#include<string>
+#include<ctime>
+#include<stdlib.h>
+#include<queue>
+#include<bit>
+#include<unordered_set>
+#include<random>
+
+
+using namespace std;
+
+//#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+//#pragma GCC optimize("O3")
+//#pragma GCC optimize("unroll-loops")
+
+
+#define endl '\n'
+#define int long long
+
+vector<vector<int>> Gr;
+vector<bool> used;
+vector<int> Size;
+int ans = 0;
+
+void sizes(int x, int p)
+{
+    Size[x] = 1;
+    for (auto u : Gr[x])
+    {
+        if (u == p || used[u])
+            continue;
+        sizes(u, x);
+        Size[x] += Size[u];
+    }
+}
+
+int centroid(int x, int p, int n)
+{
+    for (auto u : Gr[x])
+    {
+        if (u == p || used[u])
+            continue;
+        if (Size[u] > n / 2)
+            return centroid(u, x, n);
+    }
+    return x;
+}
+
+vector<int> A;
+
+void dfs(int index, int p, vector<int>& B, int cur)
+{
+    B.push_back(cur);
+    for (auto u : Gr[index])
+    {
+        if (u == p || used[u])
+            continue;
+        dfs(u, index, B, cur ^ A[u]);
+    }
+}
+
+void f(vector<int>& A, vector<int>& B)
+{
+    int zeroA, zeroB, oneA, oneB;
+    for (int bit = 0; bit < 20; bit++)
+    {
+        zeroA = zeroB = oneA = oneB = 0;
+        for (auto x : A)
+        {
+            if ((x & (1 << bit)) == 0)
+            {
+                zeroA++;
+            }
+            else
+            {
+                oneA++;
+            }
+        }
+        for (auto x : B)
+        {
+            if ((x & (1 << bit)) == 0)
+            {
+                zeroB++;
+            }
+            else
+            {
+                oneB++;
+            }
+        }
+        int delta = oneA * zeroB + oneB * zeroA;
+        ans += delta * (1 << bit);
+    }
+}
+
+void decompose(int index)
+{
+    ans += A[index];
+    vector<int> B;
+    //W.push_back(A[index]);
+    vector<int> zeroA(20, 0), oneA(20, 0);
+
+    for (int bit = 0; bit < 20; bit++)
+    {
+        if ((A[index] & (1LL << bit)) == 0)
+        {
+            zeroA[bit]++;
+        }
+        else
+        {
+            oneA[bit]++;
+        }
+    }
+
+    for (auto u : Gr[index])
+    {
+        if (!used[u])
+        {
+            B.clear();
+
+            dfs(u, index, B, A[u]);
+
+            for (int bit = 0; bit < 20; bit++)
+            {
+                int zeroB = 0, oneB = 0;
+                for (auto x : B)
+                {
+                    if ((x & (1LL << bit)) == 0)
+                    {
+                        zeroB++;
+                    }
+                    else
+                    {
+                        oneB++;
+                    }
+                }
+                int delta = oneA[bit] * zeroB + oneB * zeroA[bit];
+                ans += delta * (1LL << bit);
+            }
+            for (auto x : B)
+            {
+                //W.push_back(x ^ A[index]);
+                for (int bit = 0; bit < 20; bit++)
+                {
+                    if (((A[index] ^ x) & (1LL << bit)) == 0)
+                    {
+                        zeroA[bit]++;
+                    }
+                    else
+                    {
+                        oneA[bit]++;
+                    }
+                }
+            }
+        }
+    }
+    used[index] = true;
+    for (auto u : Gr[index])
+    {
+        if (!used[u])
+        {
+            sizes(u, u);
+            decompose(centroid(u, u, Size[u]));
+        }
+    }
+}
+
+
+void solve()
+{
+    int n; cin >> n;
+    A.resize(n);
+    Gr.resize(n);
+    Size.resize(n);
+    used.resize(n, false);
+    for (int i = 0; i < n; i++)
+        cin >> A[i];
+    int u, v;
+    for (int i = 0; i < n - 1; i++)
+    {
+        cin >> u >> v; u--, v--;
+        Gr[u].push_back(v);
+        Gr[v].push_back(u);
+    }
+    sizes(0, 0);
+    decompose(centroid(0, 0, Size[0]));
+
+    cout << ans << endl;
+
+}
+
+
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int t; t = 1;
+    for (int u = 0; u < t; u++)
+    {
+        solve();
+    }
+    return 0;
+}
