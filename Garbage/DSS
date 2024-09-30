@@ -1,0 +1,98 @@
+//Множество непересекающихся отрезков
+struct SegSet {
+    struct seg {
+        int l, r;
+        bool f[2]{ false };
+        int good = 0;
+        bool operator==(const seg& o)const
+        {
+            return r == o.r;
+        }
+        bool operator<(const seg& o)const
+        {
+            return r < o.r;
+        }
+        seg(int l, int r)
+            :l(l)
+            , r(r)
+        {
+        }
+        seg(int r)
+            :r(r)
+        {}//for erase
+        seg()
+        {
+            r = -2e18;
+            l = -2e18;
+        }//empty
+    };
+    set<seg> W;
+    //////Другие данные
+    int sz = 0;
+    int cnt = 0;
+    //////
+    
+    //Не проверяет что отрезки не пересекаются!
+    void add(seg& s)
+    {
+        int l = s.l, r = s.r;
+        auto s2 = get_next(r);
+        auto s1 = get_prev(r);
+        if (s1.r + 1 == l)
+        {
+            W.erase(s1);
+            sz -= (s1.r - s1.l + 2) / 2;
+            cnt -= s1.good;
+            merge(s1,s);
+            s = s1;
+        }
+        if (s.r + 1 == s2.l)
+        {
+            W.erase(s2);
+            sz -= (s2.r - s2.l + 2) / 2;
+            cnt -= s2.good;
+            merge(s, s2);
+        }
+        sz += (s.r - s.l + 2) / 2; s.good = 0;
+        if ((s.r - s.l + 1) % 2 == 0 && s.f[1])
+        {
+            s.good = 1;
+        }
+        else if (s.f[0])
+        {
+            s.good = 1;
+        }
+        cnt += s.good;
+        W.insert(s);
+    }
+    //b -> a, в порядке a,b
+    void merge(seg& a, seg& b)
+    {
+        int u = (a.r - a.l + 1) % 2;
+        a.r = b.r;
+        //Нужные пересчёты:
+        
+        a.f[0] |= b.f[u]; a.f[1] |= b.f[u ^ 1];
+    }
+    //Следующий или текущий отрезок по этому индексу
+    seg get_next(int i)
+    {
+        auto it = W.lower_bound(i);
+        if (it == W.end())return seg();
+        return *it;
+    }
+    void erase(int r)
+    {
+        W.erase(W.find(seg(r)));
+    }
+    seg get_prev(int i)
+    {
+        auto it = W.lower_bound(i);
+        if (it == W.begin()) return seg();
+        return *prev(it);
+    }
+    bool in_segment(int i)
+    {
+        return !(get_next(i) == seg());
+    }
+};
