@@ -1,0 +1,100 @@
+struct State {
+    int v, pos;
+    State(int v, int pos) : v(v), pos(pos) {};
+}
+
+struct SuffixTree {
+    vector<map<char, int>> next;
+    vector<int> link, par, l, r;
+    State longest_state;
+    int sz;
+    string s;
+
+    int & get(int v, char c) {
+        if (!next[v].count(c)) next[v][c] = -1;
+        return next[v][c];
+    }
+
+    int len(int v) {
+        return r[v] - l[v];
+    }
+
+    int node() {
+        next.emplace_back();
+        link.emplace_back(-1);
+        par.emplace_back(-1);
+        l.emplace_back(0);
+        r.emplace_back(0);
+        return sz++;
+    }
+    
+    SuffixTree(string s) : longest_state(0, 0), sz(0), s(s) {
+        node();
+        for (int i = 0; i < s.size(); ++i) add(i);
+    }
+
+    void add(int pos) {
+        while(true) {
+            State new_longest_state = go(longest_state, pos, pos+1);
+            if (new_longest_state.v != -1) {
+                longest_state = new_longest_state;
+                return;
+            }
+
+            int mid = split(longest_state);
+            int leaf = node();
+            l[leaf] = pos;
+            r[leaf] = s.size();
+            get(mid, s[pos]) = leaf;
+            par[leaf] = mid;
+
+            longest_state.v = get_link(mid);
+            longest_state.pos = len(longest_state.v);
+            if (!mid) return;
+        }
+    }
+    
+    int get_link(int v) {
+        if (link[v] != -1) return link[v];
+        if (par[v] == -1) return 0;
+
+        int to = get_link(par[v]);
+        // we need to remove first symbol only if we are a root child
+        return link[v] = split(go(State(to, len(to)), l[v] + (par[v] == 0), r[v]));
+    }
+
+    int split(State st) {
+        if (st.pos == len(st.v)) return st.v;
+        if (st.pos == 0) return par[st.v];
+
+        int cur = st.v;
+        int mid = node();
+        get(par[cur], s[l[cur]]) = mid;
+        get(mid, s[l[cur] + st.pos]) = cur;
+        l[mid] = l[cur];
+        r[mid] = l[cur] + st.pos;
+        l[cur] += st.pos;
+        par[mid] = par[cur];
+        par[cur] = mid;
+        return mid;
+    }
+
+    // move from st by s[from...to)
+    State go(State st, int from, int to) {
+        while(from < to) {
+            if (st.pos == len(st.v)) { // in node
+                st = State(get(st.v, s[from]), 0);
+                if (st.v == -1) return st; // 
+            } 
+            else { // on edge
+                if (s[l[st.v] + st.pos] != s[from]) 
+                    return {-1, -1}; // 
+                if (to - from < len(st.v) - st.pos) 
+                    return {st.v, st.pos + to - from}; //
+                from += len(st.v) - st.pos;
+                st.pos = len(st.v);
+            }
+        }
+        return st;
+    }   
+}//100 строк ГОООЛ
