@@ -1,0 +1,137 @@
+#include<iostream>
+#include<vector>
+#include<set>
+#include<map>
+#include<algorithm>
+#include<climits>
+#include<cmath>
+#include<numeric>
+#include<string>
+#include<ctime>
+#include<stdlib.h>
+#include<queue>
+#include<bit>
+#include<unordered_set>
+#include<unordered_map>
+#include<random>
+#include<complex>
+#include<list>
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <string>
+#include <stack>
+#include <cmath>
+#include <ctime>
+#include <array>
+#include <ctime>
+#include <climits>
+#include <random>
+#include <fstream>
+#include <algorithm>
+
+
+
+using namespace std;
+
+#pragma GCC optimize("Ofast")
+#pragma GCC target("avx,avx2,fma")
+#pragma GCC optimize("O3")
+#pragma GCC optimize("unroll-loops")
+
+
+#define endl '\n'
+#define Endl '\n'
+#define all(v) (v).begin(), (v).end()
+#define res(a, n) a.clear(); a.resize(n);
+#define ress(a, n, b) a.clear(); a.resize(n, b); 
+#define int long long
+
+mt19937 gener(337);
+uniform_real_distribution<long double> rrrrr(0.0, 1.0);
+long double rnd() { return rrrrr(gener); }
+
+vector<int> one(400, 0), two(400, 0);
+
+int calc(vector<int>& P)
+{
+    int ans = 0;
+    for (int x = 0; x < P.size(); x++)
+    {
+        int y = P[x];
+        one[x + y]++;
+        two[x - y + 200]++;
+    }
+    for (int i = 0; i < 400; i++)
+    {
+        ans += one[i] * (one[i] - 1) / 2; ans += two[i] * (two[i] - 1) / 2;
+        one[i] = two[i] = 0;
+    }
+    return ans;
+}
+
+void random_shuffle(vector<int>& P)
+{
+    int n = P.size();
+    for (int i = 0; i < n * n; i++)
+    {
+        int j = rand() % n, k = rand() % n;
+        swap(P[j], P[k]);
+    }
+}
+
+
+void solve()
+{
+    int n; cin >> n;
+    int cur, re;
+    int iter = 200;
+    vector<int> P(n), Q(n);
+    while (iter--)
+    {
+        iota(all(P), 0);
+        random_shuffle(P);
+        cur = calc(P);
+        int BUBEN = 40000;
+        double t = 1;
+        while (BUBEN--)
+        {
+            int i = rand() % n, j = rand() % n;
+            swap(P[i], P[j]);
+            re = calc(P);
+            swap(P[i], P[j]);
+            if (re < cur || exp((-re + cur) / t) > rnd())
+            {
+                swap(P[i], P[j]); cur = re;
+            }
+            if (cur == 0)
+            {
+                for (auto x : P)
+                {
+                    cout << x + 1 << " ";
+                }
+                cout << endl;
+                return;
+            }
+            t *= 0.999;
+        }
+        
+    }
+
+
+}
+
+
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin.tie(0); cout.tie(0);
+    int t; t = 1;
+    for (int u = 0; u < t; u++)
+    {
+        solve();
+    }
+    return 0;
+}
+
