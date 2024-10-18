@@ -16,6 +16,7 @@
 #include<random>
 #include<complex>
 #include<list>
+#include<bitset>
 
 using namespace std;
 
@@ -23,6 +24,7 @@ using namespace std;
 #pragma GCC target("avx,avx2,fma")
 //#pragma GCC optimize("O3")
 //#pragma GCC optimize("unroll-loops")
+//#pragma GCC target("sse,sse2,sse3,ssse3,sse4.1,sse4.2,sse4a,avx,avx2,popcnt,tune=native")
 
 
 #define endl '\n'
