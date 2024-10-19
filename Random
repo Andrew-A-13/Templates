@@ -1,0 +1,3 @@
+mt19937 gener(13);
+uniform_real_distribution<long double> rrrrr(0.0, 1.0);
+long double rnd() { return rrrrr(gener); }
