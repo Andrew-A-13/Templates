@@ -1,0 +1,66 @@
+struct DisjointSparseTable {
+    struct field {
+        int x;
+        field() :x(1) {}
+        field(int x) :x(x%mod) {}
+    };
+
+    field Oper(const field& a, const field& b)
+    {
+        field res; res.x = (a.x * b.x) % mod;
+        return res;
+    }
+
+    field neutral = field();
+    vector<vector<field>> table;
+    vector<int> firstOne;
+
+    void build(const vector<int>& A)
+    {
+        int n = A.size();
+        firstOne.resize(2*n + 1);
+        int cur_bit = 0;
+        for (int i = 0; i <= 2 * n; i++)
+        {
+            if (i == (1 << cur_bit))
+            {
+                cur_bit++;
+            }
+            firstOne[i] = cur_bit - 1;
+        }
+        int st = 0;
+        while ((1 << st) < n)st++;
+        table.resize(st, vector<field>((1 << st), neutral));
+        for (int i = 0; i < n; i++)
+        {
+            table[0][i] = field(A[i]);
+        }
+        for (int level = 1; level < st; level++)
+        {
+            for (int j = 0; j < (1 << st); j += (1 << level) * 2)
+            {
+                table[level][j + (1 << level) - 1] = table[0][j + (1 << level) - 1];
+                for (int k = j + (1 << level) - 2; k >= j; k--)
+                {
+                    table[level][k] = Oper(table[0][k], table[level][k + 1]);
+                }
+                table[level][j + (1 << level)] = table[0][j + (1 << level)];
+                for (int k = j + (1 << level) + 1; k < j+ (1 << level) * 2; k++)
+                {
+                    table[level][k] = Oper(table[0][k], table[level][k - 1]);
+                }
+            }
+        }
+    }
+
+    field get(int l, int r)
+    {
+        r--;
+        if (l == r)
+        {
+            return table[0][l];
+        }
+        int level = firstOne[l ^ r];
+        return Oper(table[level][l], table[level][r]);
+    }
+};
