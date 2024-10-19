@@ -191,6 +191,19 @@ struct Treap {
 		Root = Merge(L, R);
 	}
 
+	//Добавить элемент при использовании как set
+	void add_el(int s)
+	{
+		int key = getkey(s, Root);
+		add(s, key);
+	}
+	//Удалить элемент при использовании как set
+	void del_el(int s)
+	{
+		int key = getkey(s, Root);
+		del(key);
+	}
+
 	void add_in_point(int sum, int key)
 	{
 		auto [T, R] = Split(Root, key + 1);
