@@ -1,0 +1,81 @@
+vector<int> suff_array(string& S)
+{
+    S += (char)0;
+    int n = S.size();
+    vector<int> cnt(max(n, 256LL), 0);
+    vector<int> p(n), c(n);
+    for (int i = 0; i < n; i++)
+    {
+        cnt[S[i]]++;
+    }
+    for (int i = 1; i < cnt.size(); i++)
+    {
+        cnt[i] += cnt[i - 1];
+    }
+    for (int i = n - 1; i >= 0; i--)
+    {
+        p[--cnt[S[i]]] = i;
+    }
+    c[p[0]] = 0;
+    for (int i = 1; i < n; i++)
+    {
+        c[p[i]] = c[p[i - 1]];
+        if (S[p[i]] != S[p[i - 1]])
+        {
+            c[p[i]]++;
+        }
+    }
+    vector<int> pn(n), cn(n);
+    for (int k = 0; (1 << k) < n; k++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            pn[i] = p[i] - (1 << k);
+            if (pn[i] < 0)pn[i] += n;
+        }
+        cnt.assign(n, 0);
+        for (int i = 0; i < n; i++)
+        {
+            cnt[c[i]]++;
+        }
+        for (int i = 1; i < n; i++)cnt[i] += cnt[i - 1];
+        for (int i = n - 1; i >= 0; i--)
+        {
+            p[--cnt[c[pn[i]]]] = pn[i];
+        }
+        cn[p[0]] = 0;
+        for (int i = 1; i < n; i++)
+        {
+            cn[p[i]] = cn[p[i - 1]];
+            if (c[p[i]] != c[p[i - 1]] || c[(p[i] + (1 << k)) % n] != c[(p[i - 1] + (1 << k)) % n])
+            {
+                cn[p[i]]++;
+            }
+        }
+        c = cn;
+    }
+    S.pop_back();
+    p.erase(p.begin());
+    return p;
+}
+
+vector<int> LCP(string& S, vector<int>& suff_arr)
+{
+    int n = S.size();
+    vector<int> pos(n);
+    for (int i = 0; i < n; i++)
+    {
+        pos[suff_arr[i]] = i;
+    }
+    vector<int> ans(n - 1);
+    int k = 0;
+    for (int i = 0; i < n; i++)
+    {
+        k = max(k - 1, 0LL);
+        if (pos[i] == n - 1)continue;
+        int j = suff_arr[pos[i] + 1];
+        while (i + k < n && j + k < n && S[i + k] == S[j + k])k++;
+        ans[pos[i]] = k;
+    }
+    return ans;
+}
