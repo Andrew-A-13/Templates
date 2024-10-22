@@ -87,3 +87,23 @@ struct DAWG {
     }
 
 };
+
+/*struct Map {
+    vector<pair<int, int>> A;
+    int& operator[](int index)
+    {
+        for (int i = 0; i < A.size(); i++)if (A[i].first == index)
+        {
+            return A[i].second;
+        }
+        A.push_back({ index,0 });
+        return A.back().second;
+    }
+    bool contains(int index)
+    {
+        for (int i = 0; i < A.size(); i++)if (A[i].first == index)
+        {
+            return true;
+        }return false;
+    }
+};*/
