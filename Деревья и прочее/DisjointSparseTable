@@ -45,9 +45,9 @@ struct DisjointSparseTable {
                     table[level][k] = Oper(table[0][k], table[level][k + 1]);
                 }
                 table[level][j + (1 << level)] = table[0][j + (1 << level)];
-                for (int k = j + (1 << level) + 1; k < j+ (1 << level) * 2; k++)
+                for (int k = j + (1 << level) + 1; k < j + (1 << level) * 2; k++)
                 {
-                    table[level][k] = Oper(table[0][k], table[level][k - 1]);
+                    table[level][k] = Oper(table[level][k - 1], table[0][k]);
                 }
             }
         }
