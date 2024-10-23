@@ -97,4 +97,4 @@ struct SuffixTree {
         }
         return st;
     }   
-}//100 строк ГОООЛ
+}
