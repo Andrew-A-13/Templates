@@ -1,0 +1,180 @@
+struct DAWG {
+    struct node {
+        int link = -1;
+        int len = 0;
+        map<int, int> next;
+        //int cnt = 0;//число подстрок с соответствующим префиксом
+        //int cnt_ex = 0;//число соотв подстрок
+        int cnt = 0;
+        int cnt_cur = 0;
+        int add = 0;
+        int MAX_LEN = 0;
+    };
+    vector<node> tree;
+    void build(string& S, int w = 0)
+    {
+        int mx = 0;
+        tree.clear();
+        tree.push_back(node());
+        int last = 0;
+        //int w = S.size();
+        for (auto c : S)
+        {
+            int cur = tree.size(); mx++;
+            tree.push_back(node());
+            tree[cur].len = tree[last].len + 1;
+            tree[cur].cnt = w;
+            int p = last;
+            if (c == '#')mx = 0;
+            tree[cur].MAX_LEN = mx;
+            for (; p != -1 && !tree[p].next.contains(c); p = tree[p].link)
+            {
+                tree[p].next[c] = cur;
+            }
+            if (p == -1)
+            {
+                tree[cur].link = 0;
+            }
+            else
+            {
+                int q = tree[p].next[c];
+                if (tree[q].len == 1 + tree[p].len)
+                {
+                    tree[cur].link = q;
+                }
+                else
+                {
+                    int clone = tree.size();
+                    tree.push_back(node());
+                    tree[clone].next = tree[q].next;
+                    tree[clone].link = tree[q].link;
+                    tree[clone].len = tree[p].len + 1;
+                    tree[q].link = clone; tree[cur].link = clone;
+                    tree[clone].MAX_LEN = tree[q].MAX_LEN;
+                    for (; p != -1 && tree[p].next[c] == q; p = tree[p].link)
+                    {
+                        tree[p].next[c] = clone;
+                    }
+                }
+            }
+            last = cur;
+        }
+        vector<pair<int, int>> All;
+        for (int i = 0; i < tree.size(); i++)
+        {
+            All.push_back({ tree[i].len,i });
+        }sort(all(All));
+
+        for (int i = All.size() - 1; i >= 0; i--)
+        {
+            auto [len, j] = All[i];
+            if (tree[j].link != -1)
+            {
+                tree[tree[j].link].cnt += tree[j].cnt;
+            }
+        }
+        used.resize(tree.size(), -1);
+    }
+    /*int v = 0;
+    int count_prefixes(char c)
+    {
+        if (!tree[v].next.contains(c))return 0;
+        return tree[tree[v].next[c]].cnt;
+    }
+    int count_prefixes()
+    {
+        return tree[v].cnt;
+    }
+    int count_exactly(char c)
+    {
+        if (!tree[v].next.contains(c))return 0;
+        return tree[tree[v].next[c]].cnt_ex;
+    }
+    int count_exactly()
+    {
+        return tree[v].cnt_ex;
+    }*/
+    vector<int> used;
+    int C = 0;
+    void buildi(string& S)
+    {
+        C++;
+        queue<int> Q;
+        int v = 0;
+        for (auto s : S)
+        {
+            v = tree[v].next[s];
+            Q.push(v);
+        }
+        while (!Q.empty())
+        {
+            int el = Q.front(); Q.pop();
+            if (el == -1)continue;
+            if (used[el] == C)continue;
+            used[el] = C;
+            tree[el].cnt++;
+            Q.push(tree[el].link);
+        }
+    }
+    int get_ans(string& S, int k)
+    {
+        C++;
+        priority_queue<pair<int,int>> Q;
+        int v = 0;
+        for (auto s : S)
+        {
+            v = tree[v].next[s];
+            Q.push({ tree[v].len, v });
+            tree[v].add = 1;
+        }
+        vector<int> Cl;
+        while (!Q.empty())
+        {
+            auto [len, el] = Q.top(); Q.pop();
+            if (el == -1)continue;
+            if (used[el] == C)continue;
+            used[el] = C;
+            tree[el].cnt_cur = tree[el].add;
+            Cl.push_back(el);
+            if (tree[el].link != -1)
+            {
+                tree[tree[el].link].add += tree[el].add;
+                Q.push({ tree[tree[el].link].len, tree[el].link });
+            }
+        }
+        for (auto x : Cl)tree[x].add = 0;
+
+
+
+
+        
+        int ans = 0;
+        C++;
+        queue<int> Q2;
+        v = 0;
+        for (auto s : S)
+        {
+            v = tree[v].next[s];
+            Q2.push(v);
+        }
+        while (!Q2.empty())
+        {
+            int el = Q2.front(); Q2.pop();
+            if (el == -1)continue;
+            if (used[el] == C)continue;
+            used[el] = C;
+            //tree[el].cnt++;
+            Q2.push(tree[el].link);
+            if (tree[el].cnt >= k && el!=0)
+            {
+                int mx = min(tree[el].len, tree[el].MAX_LEN);
+                int mn = tree[tree[el].link].len + 1;
+                if (mx >= mn)
+                {
+                    ans += (mx - mn + 1) * tree[el].cnt_cur;
+                }
+            }
+        }
+        return ans;
+    }
+};
