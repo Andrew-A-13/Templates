@@ -1,0 +1,101 @@
+namespace FLOWS {
+
+    struct edge {
+        int from, to, c, flow;
+    };
+    const int INFINITE_FLOW = LLONG_MAX;
+
+    void count_level(vector<int>& level, int index, vector<vector<int>>& Gr, vector<edge>& E)
+    {
+        queue<pair<int, int>> Q;
+        Q.push({ index,0 });
+        while (!Q.empty())
+        {
+            auto [index, h] = Q.front(); Q.pop();
+            if (level[index] != -1)continue;
+            level[index] = h;
+            for (auto i : Gr[index]) if (E[i].flow < E[i].c && level[E[i].to] == -1)
+            {
+                Q.push({ E[i].to , h + 1 });
+            }
+        }
+    }
+
+    int dfs(vector<vector<int>>& Gr, vector<edge>& E, vector<int>& level, vector<int>& ptr, int t, int v, int f)
+    {
+        if (v == t)return f;
+        while (ptr[v] < Gr[v].size())
+        {
+            int e = Gr[v][ptr[v]];
+            if (level[v] + 1 != level[E[e].to] || E[e].c == E[e].flow)
+            {
+                ptr[v]++; continue;
+            }
+            int x = dfs(Gr, E, level, ptr, t, E[e].to, min(f, E[e].c - E[e].flow));
+            if (x == 0)
+            {
+                ptr[v]++; continue;
+            }
+            E[e].flow += x;
+            E[e ^ 1].flow -= x;
+            return x;
+        }
+        return 0;
+    }
+
+
+
+    // [next, capacity] - направленные рёбра - можно заранее не создавать обратные
+    int dinic(const vector<vector<pair<int, int>>>& Gr_base, int s, int t)
+    {
+        int n = Gr_base.size();
+        vector<edge> E;
+        vector<vector<int>> Gr(n);
+        ////////////////////////
+        map<pair<int, int>, int> W;
+        for (int i = 0; i < n; i++)
+        {
+            for (auto [j, c] : Gr_base[i]) if (i != j)
+            {
+                W[{i, j}] += c;
+            }
+        }
+        for (int i = 0; i < n; i++)
+        {
+            for (auto [j, c] : Gr_base[i])
+            {
+                if (W.contains({ i,j }))
+                {
+                    E.push_back({ i,j,W[{i,j}],0 });
+                    Gr[i].push_back(E.size() - 1);
+                    Gr[j].push_back(E.size());
+                    if (W.contains({ j,i }))
+                    {
+                        E.push_back({ j,i,W[{j,i}],0 });
+                    }
+                    else
+                    {
+                        E.push_back({ j,i,0,0 });
+                    }
+                    W.erase({ i,j }); W.erase({ j,i });
+                }
+            }
+        }
+        ////////////////////////////
+        vector<int> level(n);
+        int ans = 0;
+        for (int i = 0; i < n; i++)
+        {
+            level.assign(n, -1);
+            count_level(level, s, Gr, E);
+            vector<int> ptr(n, 0);
+            while (true)
+            {
+                int x = dfs(Gr, E, level, ptr, t, s, INFINITE_FLOW);
+                ans += x;
+                if (x == 0)break;
+            }
+        }
+        return ans;
+    }
+}
