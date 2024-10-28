@@ -46,6 +46,7 @@ namespace FLOWS {
 
 
     // [next, capacity] - направленные рёбра - можно заранее не создавать обратные
+    // Автоматически обробатывает кратные рёбра и петли
     int dinic(const vector<vector<pair<int, int>>>& Gr_base, int s, int t)
     {
         int n = Gr_base.size();
@@ -83,19 +84,24 @@ namespace FLOWS {
         }
         ////////////////////////////
         vector<int> level(n);
-        int ans = 0;
+        int ans = 0, d = 0;
         for (int i = 0; i < n; i++)
         {
             level.assign(n, -1);
             count_level(level, s, Gr, E);
             vector<int> ptr(n, 0);
+            d = 0;
             while (true)
             {
                 int x = dfs(Gr, E, level, ptr, t, s, INFINITE_FLOW);
-                ans += x;
+                d += x;
                 if (x == 0)break;
             }
+            ans += d;
+            if (d == 0)break;
         }
         return ans;
     }
+
+
 }
