@@ -1,0 +1,138 @@
+//[to, cap, cost]
+struct field {
+    int to, cap, cost;
+};
+ 
+namespace FLOWS {
+    struct edge {
+        int from, to, cap, flow, cost;
+    };
+    const int INF = 1e14;
+ 
+    void applyPotemtial(vector<int>& d, vector<edge>& E)
+    {
+        for (auto& [from, to, cap, flow, cost] : E)
+        {
+            cost += d[from] - d[to];
+        }
+    }
+    vector<int> FordBellamn(vector<vector<int>>& Gr, vector<edge>& E,int s)
+    {
+        int n = Gr.size();
+        vector<int> d(n, INF);
+        d[s] = 0;
+        for (int i = 0; i < n; i++)
+        {
+            for (auto& [from, to, cap, flow, cost] : E) if (cap != flow)
+            {
+                d[to] = min(d[to], d[from] + cost);
+            }
+        }
+        return d;
+    }
+ 
+    vector<int> Dijkstra(vector<vector<int>>& Gr, vector<edge>& E, int s)
+    {
+        int n = Gr.size();
+        vector<int> d(n, INF);
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> Q;
+        Q.push({ 0,s });
+        vector<bool> used(n, false);
+        while (!Q.empty())
+        {
+            auto [dis, v] = Q.top(); Q.pop();
+            if (used[v])continue;
+            used[v] = true;
+            d[v] = dis;
+            for (auto ei : Gr[v])
+            {
+                auto [from, to, cap, flow, cost] = E[ei];
+                if (!used[to] && flow != cap)
+                {
+                    Q.push({ dis + cost,to });
+                }
+            }
+        }
+        return d;
+    }
+ 
+    bool END;
+    void dfs(int u, vector<vector<int>>& Gr, vector<edge>& E, vector<int>& cur,vector<bool>& used,int t)
+    {
+        used[u] = true;
+        if (u == t)
+        {
+            END = true;
+            return;
+        }
+        for (auto ei : Gr[u])
+        {
+            auto [from, to, cap, flow, cost] = E[ei];
+            if (cost == 0 && flow != cap && !used[to])
+            {
+                cur.push_back(ei);
+                dfs(to, Gr, E, cur, used, t);
+                if (END)return;
+                cur.pop_back();
+            }
+        }
+    }
+ 
+    
+ 
+    //Граф с рёбрами формата field
+    //Возвращает [flow, cost]
+    pair<int,int> MinCostMaxFlow(vector<vector<field>>& Gr0, int s, int t)
+    {
+ 
+        int n = Gr0.size();
+        vector<edge> E;
+        vector<int> copy;
+        vector<vector<int>> Gr(n);
+        for (int u = 0; u < n; u++)
+        {
+            for (auto [v, cap, cost] : Gr0[u])
+            {
+                Gr[u].push_back(E.size());
+                E.emplace_back(u, v, cap, 0, cost);
+                copy.push_back(cost);
+                Gr[v].push_back(E.size());
+                E.emplace_back(v, u, 0, 0, -cost);
+                copy.push_back(-cost);
+            }
+        }
+        auto d = FordBellamn(Gr, E, s);
+        applyPotemtial(d, E);
+        vector<int> cur;
+        vector<bool> used(n, false);
+        int FLOW = 0;
+        int COST = 0;
+        while (true)
+        {
+            cur.clear();
+            used.assign(n, false);
+            END = false;
+            dfs(s, Gr, E, cur, used, t);
+            if (cur.empty())break;
+            int mx = 1e18;
+            for (auto ei : cur)
+            {
+                mx = min(mx, E[ei].cap - E[ei].flow);
+            }
+            FLOW += mx;
+            if (mx == 0)
+            {
+                assert(false);
+            }
+            for (auto ei : cur)
+            {
+                E[ei].flow += mx;
+                E[ei ^ 1].flow -= mx;
+                COST += copy[ei] * mx;
+            }
+            auto d = Dijkstra(Gr, E, s);
+            applyPotemtial(d, E);
+        }
+        return { FLOW,COST };
+    }
+}
