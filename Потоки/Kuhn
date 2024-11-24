@@ -1,0 +1,36 @@
+struct Kuhn {
+    vector<bool> used;
+    vector<int> match;
+    int n, k;
+    bool kuhn(int v, vector<vector<int>>& Gr)
+    {
+        if (used[v])return false;
+        used[v] = true;
+        for (auto to : Gr[v])
+        {
+            if (match[to] == -1 || kuhn(match[to], Gr))
+            {
+                match[to] = v;
+                return true;
+            }
+        }
+        return false;
+    }
+    //n, k - размеры долей - второй вектор I - индексы левой доли
+    int execute(vector<vector<int>>& Gr, vector<int>& I)
+    {
+        n = I.size(), k = Gr.size() - n;
+        used.assign(n+k, false);
+        match.assign(k+n, -1);
+        int ans = 0;
+        for (auto v : I)
+        {
+            if (kuhn(v, Gr))
+            {
+                used.assign(n+k, false);
+                ans++;
+            }
+        }
+        return ans;
+    }
+};
