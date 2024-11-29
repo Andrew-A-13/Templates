@@ -120,10 +120,7 @@ namespace FLOWS {
                 mx = min(mx, E[ei].cap - E[ei].flow);
             }
             FLOW += mx;
-            if (mx == 0)
-            {
-                assert(false);
-            }
+            
             for (auto ei : cur)
             {
                 E[ei].flow += mx;
