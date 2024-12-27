@@ -28,7 +28,7 @@ struct DisjointSparseTable {
             }
             firstOne[i] = cur_bit - 1;
         }
-        int st = 0;
+        int st = 1;
         while ((1 << st) < n)st++;
         table.resize(st, vector<field>((1 << st), neutral));
         for (int i = 0; i < n; i++)
