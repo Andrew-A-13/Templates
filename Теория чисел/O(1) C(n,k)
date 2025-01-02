@@ -5,6 +5,11 @@ int C(int n, int k)
     return F[n] * R[k] % mod * R[n - k] % mod;
 }
 
+
+
+
+
+
 F.resize(N); R.resize(N);
 F[0] = R[0] = 1;
 for (int i = 1; i < N; i++)
