@@ -1,0 +1,19 @@
+vector<int> F, R;
+const int N = 1e6 + 1;
+int C(int n, int k)
+{
+    return F[n] * R[k] % mod * R[n - k] % mod;
+}
+
+F.resize(N); R.resize(N);
+F[0] = R[0] = 1;
+for (int i = 1; i < N; i++)
+{
+    F[i] = F[i - 1] * i % mod;
+    /*R[i] = f(F[i]);*/
+}
+R[N - 1] = f(F[N - 1]);
+for (int i = N - 2; i > 0; i--)
+{
+    R[i] = R[i + 1] * (i + 1) % mod;
+}
