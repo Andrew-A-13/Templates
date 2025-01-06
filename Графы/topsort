@@ -1,0 +1,22 @@
+void topsortdfs(vector<vector<int>>& Gr, int index, vector<bool>& used, vector<int>& order)
+{
+    used[index] = true;
+    for (auto u : Gr[index])if (!used[u])
+    {
+        topsortdfs(Gr, u, used, order);
+    }
+    order.push_back(index);
+}
+ 
+vector<int> topsort(vector<vector<int>>& Gr)
+{
+    int n = Gr.size();
+    vector<int> order;
+    vector<bool> used(n, false);
+    for (int i = 0; i < n; i++)if (!used[i])
+    {
+        topsortdfs(Gr, i, used, order);
+    }
+    reverse(all(order));
+    return order;
+}
