@@ -1,0 +1,45 @@
+vector<int> tin, tout;
+//res(tin, n); res(tout, n);!!!!!!!!!!!!!!!
+
+int t = 0;
+
+void pre_dfs(vector<vector<int>>& Gr, vector<bool>& used, int index, vector<vector<int>>& next, int last)
+{
+	used[index] = true;
+	tin[index] = t++;
+	next[index][0] = last;
+	for (int bit = 1; bit < 20; bit++)
+	{
+		next[index][bit] = next[next[index][bit - 1]][bit - 1];
+	}
+	for (auto x : Gr[index])
+	{
+		if (!used[x])
+		{
+			pre_dfs(Gr, used,  x,  next, index);
+		}
+	}
+	tout[index] = t++;
+}
+
+bool IsAn(int root, int u)
+{
+	if (tin[root] <= tin[u] && tout[u] <= tout[root])
+		return true;
+	return false;
+}
+
+int LCA(int u, int v, vector<vector<int>>& next)
+{
+	if (IsAn(u, v))
+		return u;
+	for (int bit = 19; bit >= 0; bit--)
+	{
+		if (!IsAn(next[u][bit], v))
+		{
+			u = next[u][bit];
+		}
+	}
+	u = next[u][0];
+	return u;
+}
