@@ -1,0 +1,81 @@
+namespace Matrix {
+    struct Matrix {
+        int M[20][20]{};
+        Matrix() = default;
+
+        //Eденичная матрица
+        Matrix(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                M[i][i] = 1;
+            }
+        }
+    };
+
+    Matrix multiply(Matrix& a, Matrix& b, Matrix& res)
+    {
+        for (int i = 0; i < 20; i++)
+        {
+            for (int j = 0; j < 20; j++)
+            {
+                res.M[i][j] = 0;
+                res.M[i][j] += a.M[i][0] * b.M[0][j];
+                res.M[i][j] += a.M[i][1] * b.M[1][j];
+                res.M[i][j] += a.M[i][2] * b.M[2][j];
+                res.M[i][j] += a.M[i][3] * b.M[3][j];
+                res.M[i][j] += a.M[i][4] * b.M[4][j];
+                res.M[i][j] += a.M[i][5] * b.M[5][j];
+                res.M[i][j] += a.M[i][6] * b.M[6][j];
+                res.M[i][j] += a.M[i][7] * b.M[7][j];
+                res.M[i][j] += a.M[i][8] * b.M[8][j];
+                res.M[i][j] += a.M[i][9] * b.M[9][j];
+                res.M[i][j] += a.M[i][10] * b.M[10][j];
+                res.M[i][j] += a.M[i][11] * b.M[11][j];
+                res.M[i][j] += a.M[i][12] * b.M[12][j];
+                res.M[i][j] += a.M[i][13] * b.M[13][j];
+                res.M[i][j] += a.M[i][14] * b.M[14][j];
+                res.M[i][j] += a.M[i][15] * b.M[15][j];
+                res.M[i][j] += a.M[i][16] * b.M[16][j];
+                res.M[i][j] += a.M[i][17] * b.M[17][j];
+                res.M[i][j] += a.M[i][18] * b.M[18][j];
+                res.M[i][j] += a.M[i][19] * b.M[19][j];
+                res.M[i][j] %= mod;
+            }
+        }
+        return res;
+    }
+
+    Matrix multiply2(Matrix& a, Matrix b)
+    {
+        Matrix res;
+        for (int i = 0; i < 20; i++)
+        {
+            for (int j = 0; j < 20; j++)
+            {
+                res.M[i][j] += a.M[i][0] * b.M[0][j];
+                res.M[i][j] += a.M[i][1] * b.M[1][j];
+                res.M[i][j] += a.M[i][2] * b.M[2][j];
+                res.M[i][j] += a.M[i][3] * b.M[3][j];
+                res.M[i][j] += a.M[i][4] * b.M[4][j];
+                res.M[i][j] += a.M[i][5] * b.M[5][j];
+                res.M[i][j] += a.M[i][6] * b.M[6][j];
+                res.M[i][j] += a.M[i][7] * b.M[7][j];
+                res.M[i][j] += a.M[i][8] * b.M[8][j];
+                res.M[i][j] += a.M[i][9] * b.M[9][j];
+                res.M[i][j] += a.M[i][10] * b.M[10][j];
+                res.M[i][j] += a.M[i][11] * b.M[11][j];
+                res.M[i][j] += a.M[i][12] * b.M[12][j];
+                res.M[i][j] += a.M[i][13] * b.M[13][j];
+                res.M[i][j] += a.M[i][14] * b.M[14][j];
+                res.M[i][j] += a.M[i][15] * b.M[15][j];
+                res.M[i][j] += a.M[i][16] * b.M[16][j];
+                res.M[i][j] += a.M[i][17] * b.M[17][j];
+                res.M[i][j] += a.M[i][18] * b.M[18][j];
+                res.M[i][j] += a.M[i][19] * b.M[19][j];
+                res.M[i][j] %= mod;
+            }
+        }
+        return res;
+    }
+}
