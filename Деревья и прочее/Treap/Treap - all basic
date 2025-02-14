@@ -1,0 +1,213 @@
+struct Treap {
+    static int GeneratePriority()
+    {
+        static mt19937 Generator(42);
+        return uniform_int_distribution<int>()(Generator);
+    }
+
+    struct field {
+        int priority;
+        int sz = 1;
+        int l = -1, r = -1;
+        int mn = 1e18;
+        int add = 0;
+        int x;
+        bool inverse = false;
+        field(int x)
+        {
+            priority = GeneratePriority();
+            mn = x;
+            this->x = x;
+        }
+    };
+    vector<field> tree;
+    int root = -1;
+
+    void recount(int index)
+    {
+        if (index == -1)return;
+        tree[index].sz = 1;
+        tree[index].mn = tree[index].x;
+        if (tree[index].l != -1)
+        {
+            tree[index].sz += tree[tree[index].l].sz;
+            tree[index].mn = min(tree[index].mn, tree[tree[index].l].mn);
+        }
+        if (tree[index].r != -1)
+        {
+            tree[index].sz += tree[tree[index].r].sz;
+            tree[index].mn = min(tree[index].mn, tree[tree[index].r].mn);
+        }
+    }
+
+    void push(int index)
+    {
+        if (index == -1)return;
+        if (tree[index].add != 0)
+        {
+            int a = tree[index].add; tree[index].add = 0;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].mn += a;
+                tree[tree[index].l].add += a;
+                tree[tree[index].l].x += a;
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].mn += a;
+                tree[tree[index].r].add += a;
+                tree[tree[index].r].x += a;
+            }
+        }
+        if (tree[index].inverse)
+        {
+            tree[index].inverse = false;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].inverse = !tree[tree[index].l].inverse;
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].inverse = !tree[tree[index].r].inverse;
+            }
+            swap(tree[index].l, tree[index].r);
+        }
+    }
+
+    int merge(int l, int r)
+    {
+        push(l); push(r);
+        if (l == -1)return r;
+        if (r == -1)return l;
+        if (tree[l].priority > tree[r].priority)
+        {
+            tree[l].r = merge(tree[l].r, r);
+            recount(l);
+            return l;
+        }
+        else
+        {
+            tree[r].l = merge(l, tree[r].l);
+            recount(r);
+            return r;
+        }
+    }
+
+    // key = 1 - 1 элемент
+    pair<int, int> split(int index, int key)
+    {
+        if (index == -1)
+        {
+            return { -1,-1 };
+        }
+        push(index);
+        if (key <= 0)
+        {
+            return { -1,index };
+        }
+        if (key >= tree[index].sz)
+        {
+            return { index,-1 };
+        }
+        if (tree[index].l == -1)
+        {
+            if (key == 1)
+            {
+                int R = tree[index].r;
+                tree[index].r = -1;
+                recount(index);
+                return { index,R };
+            }
+            auto [L, R] = split(tree[index].r, key - 1);
+            tree[index].r = L;
+            recount(index);
+            return { index,R };
+        }
+        if (key == tree[tree[index].l].sz + 1)
+        {
+            int R = tree[index].r;
+            tree[index].r = -1;
+            recount(index);
+            return { index,R };
+        }
+        if (key <= tree[tree[index].l].sz)
+        {
+            auto [L, R] = split(tree[index].l, key);
+            tree[index].l = R;
+            recount(index);
+            return { L,index };
+        }
+        else
+        {
+            auto [L, R] = split(tree[index].r, key - tree[tree[index].l].sz - 1);
+            tree[index].r = L;
+            recount(index);
+            return { index,R };
+        }
+    }
+
+    // Добавить элемент после элемннта key
+    void insert(int x, int key)
+    {
+        auto [L, R] = split(root, key + 1);
+        tree.push_back(field(x));
+        int mid = tree.size() - 1;
+        root = merge(L, mid);
+        root = merge(root, R);
+    }
+
+
+    //Номер key >= 0
+    void erase(int key)
+    {
+        auto [L, R] = split(root, key + 1);
+        auto [LL, mid] = split(L, key);
+        root = merge(LL, R);
+    }
+
+    void add(int l, int r, int x)
+    {
+        auto [L, R] = split(root, r);
+        auto [LL, M] = split(L, l);
+        tree[M].add += x;
+        tree[M].mn += x;
+        tree[M].x += x;
+        root = merge(LL, M);
+        root = merge(root, R);
+    }
+
+    void reverse(int l, int r)
+    {
+        auto [L, R] = split(root, r);
+        auto [LL, M] = split(L, l);
+        tree[M].inverse = !tree[M].inverse;
+        root = merge(LL, M);
+        root = merge(root, R);
+    }
+
+    int MIN(int l, int r)
+    {
+        auto [L, R] = split(root, r);
+        auto [LL, M] = split(L, l);
+        int ans = tree[M].mn;
+        root = merge(LL, M);
+        root = merge(root, R);
+        return ans;
+    }
+
+    // -->
+    void cycleshift(int l, int r, int t)
+    {
+        //l--, r--;
+        int len = r - l;
+        t %= len;
+        t = (len - t) % len;
+        auto [L, R] = split(root, r);
+        auto [LL, M] = split(L, l);
+        auto [ML, MR] = split(M, t);
+        M = merge(MR, ML);
+        root = merge(LL, M);
+        root = merge(root, R);
+    }
+
+};
