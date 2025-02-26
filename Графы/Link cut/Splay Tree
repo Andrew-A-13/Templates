@@ -1,0 +1,267 @@
+struct SplayTree {
+    struct field {
+        int l = -1, r = -1, p = -1;
+        int sz = 1, mn, x, add = 0;
+        bool inverse = false;
+        field() {}
+        field(int a)
+        {
+            mn = x = a;
+        }
+
+    };
+    vector<field> tree;
+    int root = -1;
+
+    void re(int index)
+    {
+        if (index == -1)return;
+        tree[index].sz = 1;
+        tree[index].mn = tree[index].x;
+        if (tree[index].l != -1)
+        {
+            tree[index].sz += tree[tree[index].l].sz;
+            tree[index].mn = min(tree[index].mn, tree[tree[index].l].mn);
+        }
+
+        if (tree[index].r != -1)
+        {
+            tree[index].sz += tree[tree[index].r].sz;
+            tree[index].mn = min(tree[index].mn, tree[tree[index].r].mn);
+        }
+    }
+
+    void push(int index)
+    {
+        if (index == -1)return;
+        if (tree[index].add != 0)
+        {
+            int a = tree[index].add;
+            tree[index].add = 0;
+
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].add += a;
+                tree[tree[index].l].mn += a;
+                tree[tree[index].l].x += a;
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].add += a;
+                tree[tree[index].r].mn += a;
+                tree[tree[index].r].x += a;
+            }
+        }
+        if (tree[index].inverse)
+        {
+            tree[index].inverse = false;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].inverse = !tree[tree[index].l].inverse;
+                swap(tree[tree[index].l].l, tree[tree[index].l].r);
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].inverse = !tree[tree[index].r].inverse;
+                swap(tree[tree[index].r].l, tree[tree[index].r].r);
+            }
+            //swap(tree[index].l, tree[index].r);
+        }
+    }
+
+    void rotate(int x)
+    {
+        int p = tree[x].p;
+        int b;
+        if (tree[tree[x].p].l == x)
+        {
+
+            b = tree[x].r;
+            tree[x].p = tree[p].p;
+            if (tree[p].p != -1)
+            {
+                if (tree[tree[p].p].l == p)
+                {
+                    tree[tree[p].p].l = x;
+                }
+                else
+                {
+                    tree[tree[p].p].r = x;
+                }
+            }
+            tree[p].l = b;
+            tree[p].p = x;
+            tree[x].r = p;
+            if (b != -1)
+            {
+                tree[b].p = p;
+            }
+        }
+        else
+        {
+            b = tree[x].l;
+            tree[x].p = tree[p].p;
+            if (tree[p].p != -1)
+            {
+                if (tree[tree[p].p].l == p)
+                {
+                    tree[tree[p].p].l = x;
+                }
+                else
+                {
+                    tree[tree[p].p].r = x;
+                }
+            }
+            tree[p].r = b;
+            tree[p].p = x;
+            tree[x].l = p;
+            if (b != -1)
+            {
+                tree[b].p = p;
+            }
+        }
+        re(p); re(x);
+    }
+
+    void splay_by_index(int x)
+    {
+        while (tree[x].p != -1)
+        {
+            int p = tree[x].p;
+            int g = tree[p].p;
+            if (g == -1)
+            {
+                rotate(x); break;
+            }
+            if ((tree[p].l == x && tree[g].r == p) || (tree[p].r == x && tree[g].l == p))
+            {
+                rotate(x);
+                rotate(x);
+            }
+            else
+            {
+                rotate(p);
+                rotate(x);
+            }
+        }
+    }
+
+    int splay(int key, int index)
+    {
+        push(index);
+        int L = 0;
+        if (tree[index].l != -1)
+        {
+            L = tree[tree[index].l].sz;
+        }
+        if (key == L)
+        {
+            splay_by_index(index);
+            return index;
+        }
+        if (L > key)
+        {
+            if (tree[index].l == -1)
+            {
+                return index;
+            }
+            return splay(key, tree[index].l);
+        }
+        else
+        {
+            if (tree[index].r == -1)
+            {
+                return index;
+            }
+            return splay(key - L - 1, tree[index].r);
+        }
+    }
+
+    int merge(int l, int r)
+    {
+        if (l == -1)return r;
+        l = splay(tree[l].sz - 1, l);
+        tree[l].r = r;
+        if (r != -1)
+        {
+            tree[r].p = l;
+        }
+        re(l);
+        return l;
+    }
+
+    pair<int, int> split(int index, int key)
+    {
+        if (index == -1)return{ -1,-1 };
+        if (key >= tree[index].sz)return{ index,-1 };
+        index = splay(key, index);
+        int l = tree[index].l;
+        tree[index].l = -1;
+        if (l != -1)
+        {
+            tree[l].p = -1;
+        }
+        re(index);
+        return { l, index };
+    }
+
+    void insert(int x, int key)
+    {
+        auto [l, r] = split(root, key);
+        int M = tree.size();
+        tree.emplace_back(x);
+        root = merge(l, M);
+        root = merge(root, r);
+    }
+
+    void erase(int key)
+    {
+        auto [T, r] = split(root, key);
+        auto [l, M] = split(T, key - 1);
+        root = merge(l, r);
+    }
+
+    int MIN(int l, int r)
+    {
+        auto [T, R] = split(root, r);
+        auto [L, M] = split(T, l);
+        int ans = tree[M].mn;
+        root = merge(L, M);
+        root = merge(root, R);
+        return ans;
+    }
+
+    void add(int l, int r, int x)
+    {
+        auto [T, R] = split(root, r);
+        auto [L, M] = split(T, l);
+        tree[M].add += x;
+        tree[M].x += x;
+        tree[M].mn += x;
+        root = merge(L, M);
+        root = merge(root, R);
+    }
+
+    void Reverse(int l, int r)
+    {
+        auto [T, R] = split(root, r);
+        auto [L, M] = split(T, l);
+        tree[M].inverse = !tree[M].inverse;
+        swap(tree[M].l, tree[M].r);
+        root = merge(L, M);
+        root = merge(root, R);
+    }
+
+    void revolve(int l, int r, int t)
+    {
+        auto [T, R] = split(root, r);
+        auto [L, M] = split(T, l);
+        int len = r - l;
+        t %= len;
+        t = (len - t) % len;
+        auto [LL, RR] = split(M, t);
+        root = merge(L, RR);
+        root = merge(root, LL);
+        root = merge(root, R);
+    }
+};
