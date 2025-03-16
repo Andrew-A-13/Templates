@@ -1,0 +1,351 @@
+struct LinkCut {
+
+    struct field {
+        int l = -1, r = -1, p = -1;
+        int sz = 1;
+        int ptr = -1;
+        bool inverse = false;
+        int value = 0, sum = 0;
+        field() {}
+        field(int a)
+        {
+        }
+
+    };
+
+    vector<field> tree;
+
+    LinkCut() = default;
+
+    LinkCut(int n)
+    {
+        tree.resize(n);
+    }
+
+    void add_empty_vertex()
+    {
+        tree.emplace_back();
+    }
+
+    void re(int index)
+    {
+        if (index == -1)return;
+        tree[index].sz = 1;
+        tree[index].sum = tree[index].value;
+        if (tree[index].l != -1)
+        {
+            tree[index].sz += tree[tree[index].l].sz;
+            //tree[index].mn = min(tree[index].mn, tree[tree[index].l].mn);
+            tree[index].sum += tree[tree[index].l].sum;
+        }
+
+        if (tree[index].r != -1)
+        {
+            tree[index].sz += tree[tree[index].r].sz;
+            //tree[index].mn = min(tree[index].mn, tree[tree[index].r].mn);
+            tree[index].sum += tree[tree[index].r].sum;
+        }
+    }
+
+    void push(int index)
+    {
+        if (index == -1)return;
+        //if (tree[index].add != 0)
+        //{
+        //    int a = tree[index].add;
+        //    tree[index].add = 0;
+
+        //    if (tree[index].l != -1)
+        //    {
+        //        tree[tree[index].l].add += a;
+        //        tree[tree[index].l].mn += a;
+        //        tree[tree[index].l].x += a;
+        //    }
+        //    if (tree[index].r != -1)
+        //    {
+        //        tree[tree[index].r].add += a;
+        //        tree[tree[index].r].mn += a;
+        //        tree[tree[index].r].x += a;
+        //    }
+        //}
+        if (tree[index].inverse)
+        {
+            tree[index].inverse = false;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].inverse = !tree[tree[index].l].inverse;
+                swap(tree[tree[index].l].l, tree[tree[index].l].r);
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].inverse = !tree[tree[index].r].inverse;
+                swap(tree[tree[index].r].l, tree[tree[index].r].r);
+            }
+            //swap(tree[index].l, tree[index].r);
+        }
+    }
+
+    void rotate(int x)
+    {
+        int p = tree[x].p;
+        int b;
+        if (tree[tree[x].p].l == x)
+        {
+
+            b = tree[x].r;
+            tree[x].p = tree[p].p;
+            if (tree[p].p != -1)
+            {
+                if (tree[tree[p].p].l == p)
+                {
+                    tree[tree[p].p].l = x;
+                }
+                else
+                {
+                    tree[tree[p].p].r = x;
+                }
+            }
+            tree[p].l = b;
+            tree[p].p = x;
+            tree[x].r = p;
+            if (b != -1)
+            {
+                tree[b].p = p;
+            }
+        }
+        else
+        {
+            b = tree[x].l;
+            tree[x].p = tree[p].p;
+            if (tree[p].p != -1)
+            {
+                if (tree[tree[p].p].l == p)
+                {
+                    tree[tree[p].p].l = x;
+                }
+                else
+                {
+                    tree[tree[p].p].r = x;
+                }
+            }
+            tree[p].r = b;
+            tree[p].p = x;
+            tree[x].l = p;
+            if (b != -1)
+            {
+                tree[b].p = p;
+            }
+        }
+        re(p); re(x);
+    }
+    void splay_by_index(int x)
+    {
+        while (tree[x].p != -1)
+        {
+            int p = tree[x].p;
+            int g = tree[p].p;
+            if (g == -1)
+            {
+                push(p); push(x);
+                tree[x].ptr = tree[tree[x].p].ptr; tree[tree[x].p].ptr = -1;
+                rotate(x); break;
+            }
+            push(g); push(p); push(x);
+            if ((tree[p].l == x && tree[g].r == p) || (tree[p].r == x && tree[g].l == p))
+            {
+                rotate(x);
+                if (tree[tree[x].p].ptr != -1)
+                {
+                    tree[x].ptr = tree[tree[x].p].ptr; tree[tree[x].p].ptr = -1;
+                }
+                rotate(x);
+            }
+            else
+            {
+                if (tree[tree[p].p].ptr != -1)
+                {
+                    tree[x].ptr = tree[tree[p].p].ptr; tree[tree[p].p].ptr = -1;
+                }
+                rotate(p);
+                rotate(x);
+            }
+        }
+
+    }
+
+    int splay(int key, int index)
+    {
+        push(index);
+        int L = 0;
+        if (tree[index].l != -1)
+        {
+            L = tree[tree[index].l].sz;
+        }
+        if (key == L)
+        {
+            splay_by_index(index);
+            return index;
+        }
+        if (L > key)
+        {
+            if (tree[index].l == -1)
+            {
+                return index;
+            }
+            return splay(key, tree[index].l);
+        }
+        else
+        {
+            if (tree[index].r == -1)
+            {
+                return index;
+            }
+            return splay(key - L - 1, tree[index].r);
+        }
+    }
+
+    void splay_by_indexUSE(int x)
+    {
+        int base = 0;
+        if (tree[x].l != -1)
+        {
+            base += tree[tree[x].l].sz;
+        }
+        if (tree[x].p != -1 && tree[tree[x].p].inverse)
+        {
+            base = tree[x].sz - base - 1;
+        }
+        auto [key, root] = KEY(x, base);
+        splay(key, root);
+    }
+
+    pair<int, int> KEY(int x, int key)
+    {
+        if (tree[x].p == -1)
+        {
+            return { key,x };
+        }
+        int p = tree[x].p;
+        if (tree[tree[x].p].l == x)
+        {
+            if (tree[p].p != -1 && tree[tree[p].p].inverse)
+            {
+                key = tree[p].sz - key - 1;
+            }
+            return KEY(tree[x].p, key);
+        }
+        else
+        {
+            int add = (tree[p].l != -1 ? tree[tree[p].l].sz : 0) + 1;
+            key += add;
+            if (tree[p].p != -1 && tree[tree[p].p].inverse)
+            {
+                key = tree[p].sz - key - 1;
+            }
+            return KEY(tree[x].p, key);
+        }
+    }
+
+    void expose(int x)
+    {
+        splay_by_indexUSE(x);
+        if (tree[x].r != -1) {
+            tree[tree[x].r].ptr = x;
+            tree[tree[x].r].p = -1;
+            tree[x].r = -1;
+            re(x);
+        }
+        int copy = x;
+        while (tree[x].ptr != -1)
+        {
+            int u = tree[x].ptr;
+            splay_by_indexUSE(u);
+
+            if (tree[u].r != -1)
+            {
+                tree[tree[u].r].ptr = u;
+                tree[tree[u].r].p = -1;
+            }
+            tree[u].r = x;
+            tree[x].ptr = -1;
+            tree[x].p = u;
+            re(u);
+            x = u;
+        }
+        splay_by_indexUSE(copy);
+    }
+
+    // parent(v) -> -1
+    void cut(int v)
+    {
+        splay_by_indexUSE(v);
+        if (tree[v].l != -1)
+        {
+            tree[tree[v].l].ptr = tree[v].ptr;
+            tree[tree[v].l].p = -1;
+            tree[v].l = -1;
+            re(v);
+        }
+        tree[v].ptr = -1;
+    }
+
+    void cut(int u, int v)
+    {
+        expose(u);
+        splay_by_indexUSE(v);
+        if (tree[v].ptr == u)
+        {
+            cut(v);
+        }
+        else
+        {
+            cut(u);
+        }
+    }
+    // u = parent(v)
+    void link(int u, int v)
+    {
+        expose(v);
+        tree[v].inverse = true;
+        swap(tree[v].l, tree[v].r);
+        tree[v].ptr = u;
+    }
+
+    int lca(int u, int v)
+    {
+        expose(u);
+        expose(v);
+        splay_by_indexUSE(u);
+        return (tree[u].ptr != -1 ? tree[u].ptr : u);
+    }
+    bool connected(int u, int v)
+    {
+        expose(u);
+        int r = splay(0, u);
+        expose(v);
+        return r == splay(0, v);
+    }
+
+    void add(int x, int v)
+    {
+        splay_by_indexUSE(v);
+        tree[v].value += x; tree[v].sum += x;
+    }
+
+    int get_sum(int v)
+    {
+        expose(v);
+        return tree[v].sum;
+    }
+
+    int get(int v)
+    {
+        return tree[v].value;
+    }
+
+    int get_sum(int u, int v)
+    {
+        int LCA = lca(u, v);
+        return get_sum(u) + get_sum(v) - 2 * get_sum(LCA) + get(LCA);
+    }
+};
