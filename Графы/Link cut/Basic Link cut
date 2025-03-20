@@ -140,6 +140,7 @@ struct LinkCut {
     }
     void splay_by_index(int x)
     {
+        push(x);
         while (tree[x].p != -1)
         {
             int p = tree[x].p;
@@ -149,6 +150,10 @@ struct LinkCut {
                 push(p); push(x);
                 tree[x].ptr = tree[tree[x].p].ptr; tree[tree[x].p].ptr = -1;
                 rotate(x); break;
+            }
+            if (tree[g].p != -1)
+            {
+                push(tree[g].p);
             }
             push(g); push(p); push(x);
             if ((tree[p].l == x && tree[g].r == p) || (tree[p].r == x && tree[g].l == p))
@@ -204,22 +209,8 @@ struct LinkCut {
         }
     }
 
-    void splay_by_indexUSE(int x)
-    {
-        int base = 0;
-        if (tree[x].l != -1)
-        {
-            base += tree[tree[x].l].sz;
-        }
-        if (tree[x].p != -1 && tree[tree[x].p].inverse)
-        {
-            base = tree[x].sz - base - 1;
-        }
-        auto [key, root] = KEY(x, base);
-        splay(key, root);
-    }
 
-    pair<int, int> KEY(int x, int key)
+    /*pair<int, int> KEY(int x, int key)
     {
         if (tree[x].p == -1)
         {
@@ -244,11 +235,11 @@ struct LinkCut {
             }
             return KEY(tree[x].p, key);
         }
-    }
+    }*/
 
     void expose(int x)
     {
-        splay_by_indexUSE(x);
+        splay_by_index(x);
         if (tree[x].r != -1) {
             tree[tree[x].r].ptr = x;
             tree[tree[x].r].p = -1;
@@ -259,7 +250,7 @@ struct LinkCut {
         while (tree[x].ptr != -1)
         {
             int u = tree[x].ptr;
-            splay_by_indexUSE(u);
+            splay_by_index(u);
 
             if (tree[u].r != -1)
             {
@@ -272,13 +263,13 @@ struct LinkCut {
             re(u);
             x = u;
         }
-        splay_by_indexUSE(copy);
+        splay_by_index(copy);
     }
 
     // parent(v) -> -1
     void cut(int v)
     {
-        splay_by_indexUSE(v);
+        splay_by_index(v);
         if (tree[v].l != -1)
         {
             tree[tree[v].l].ptr = tree[v].ptr;
@@ -292,7 +283,7 @@ struct LinkCut {
     void cut(int u, int v)
     {
         expose(u);
-        splay_by_indexUSE(v);
+        splay_by_index(v);
         if (tree[v].ptr == u)
         {
             cut(v);
@@ -315,7 +306,7 @@ struct LinkCut {
     {
         expose(u);
         expose(v);
-        splay_by_indexUSE(u);
+        splay_by_index(u);
         return (tree[u].ptr != -1 ? tree[u].ptr : u);
     }
     bool connected(int u, int v)
@@ -328,7 +319,7 @@ struct LinkCut {
 
     void add(int x, int v)
     {
-        splay_by_indexUSE(v);
+        splay_by_index(v);
         tree[v].value += x; tree[v].sum += x;
     }
 
@@ -346,6 +337,25 @@ struct LinkCut {
     int get_sum(int u, int v)
     {
         int LCA = lca(u, v);
-        return get_sum(u) + get_sum(v) - 2 * get_sum(LCA) + get(LCA);
+        int pr = -1;
+        splay_by_index(LCA);
+        if (tree[LCA].l != -1)
+        {
+            pr = splay(tree[tree[LCA].l].sz - 1, LCA);
+        }
+        cut(LCA);
+        expose(u); expose(v);
+        int ans = 0;
+        ans += tree[v].sum;
+        if (LCA != u)
+        {
+            ans += tree[u].sum;
+        }
+        if (pr != -1) {
+            link(pr, LCA);
+        }
+
+
+        return ans;
     }
 };
