@@ -1,0 +1,90 @@
+struct PersistentTree {
+    struct field {
+        int l = -1, r = -1;
+        int sum = 0;
+    };
+    vector<field> tree;
+    vector<int> roots;
+    int n;
+    void build(const vector<int>& A)
+    {
+        n = A.size();
+        tree.emplace_back();
+        BUILD(0, n, 0, A);
+        roots.push_back(0);
+    }
+ 
+    void BUILD(int l, int r, int index, const vector<int>& A)
+    {
+        if (l + 1 == r)
+        {
+            tree[index].sum = A[l];
+            return;
+        }
+        int m = (l + r) / 2;
+        tree[index].l = tree.size();
+        tree.emplace_back();
+        tree[index].r = tree.size();
+        tree.emplace_back();
+        BUILD(l, m, tree[index].l, A);
+        BUILD(m, r, tree[index].r, A);
+        tree[index].sum = tree[tree[index].l].sum + tree[tree[index].r].sum;
+    }
+ 
+    int Set(int pos, int value)
+    {
+        int r = SET(0, n, pos, value, roots.back());
+        roots.push_back(r);
+        return r;
+    }
+ 
+    int SET(int l, int r, int pos, int value, int index)
+    {
+        tree.push_back(tree[index]);
+        index = tree.size() - 1;
+        if (l + 1 == r)
+        {
+            tree[index].sum = value;
+            return index;
+        }
+        int m = (l + r) / 2;
+        if (pos < m)
+        {
+            tree[index].l = SET(l, m, pos, value, tree[index].l);
+        }
+        else
+        {
+            tree[index].r = SET(m, r, pos, value, tree[index].r);
+        }
+        tree[index].sum = tree[tree[index].l].sum + tree[tree[index].r].sum;
+        return index;
+    }
+ 
+    int binarylifting(int version, int k)
+    {
+        return binarylifting(0, n, version, k + 1);
+    }
+ 
+ 
+    int binarylifting(int l, int r, int index, int k)
+    {
+        if (l + 1 == r)
+        {
+            if (k == tree[index].sum) {
+                return l;
+            }
+            return n;
+        }
+        int m = (l + r) / 2;
+        if (tree[tree[index].l].sum < k)
+        {
+            return binarylifting(m, r, tree[index].r, k - tree[tree[index].l].sum);
+        }
+        else
+        {
+            return binarylifting(l, m, tree[index].l, k);
+        }
+    }
+ 
+ 
+};
