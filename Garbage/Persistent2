@@ -1,0 +1,81 @@
+struct PersistentTree {
+    struct field {
+        int l = -1, r = -1;
+        int sum = 0;
+    };
+    vector<field> tree;
+    vector<int> roots;
+    int n;
+    void build(const vector<int>& A)
+    {
+        n = A.size();
+        tree.emplace_back();
+        roots.push_back(0);
+        BUILD(0, n, A, 0);
+    }
+    void BUILD(int l, int r, const vector<int>& A, int index)
+    {
+        if (l + 1 == r)
+        {
+            tree[index].sum = A[l];
+            return;
+        }
+        tree[index].l = tree.size();
+        tree.emplace_back();
+        tree[index].r = tree.size();
+        tree.emplace_back();
+        int m = (l + r) / 2;
+        BUILD(l, m, A, tree[index].l);
+        BUILD(m, r, A, tree[index].r);
+        tree[index].sum = tree[tree[index].l].sum + tree[tree[index].r].sum;
+    }
+ 
+    int Set(int pos, int value)
+    {
+        int r = SET(0, n, pos, value, roots.back());
+        roots.push_back(r);
+        return r;
+    }
+ 
+    int SET(int l, int r, int pos, int value, int index)
+    {
+        tree.push_back(tree[index]);
+        index = tree.size() - 1;
+        
+        if (l + 1 == r)
+        {
+            tree[index].sum = value;
+            return index;
+        }
+        int m = (l + r) / 2;
+        if (pos < m)
+        {
+            tree[index].l = SET(l, m, pos, value, tree[index].l);
+        }
+        else
+        {
+            tree[index].r = SET(m, r, pos, value, tree[index].r);
+        }
+        tree[index].sum = tree[tree[index].l].sum + tree[tree[index].r].sum;
+        return index;
+    }
+ 
+    int get(int l, int r, int index)
+    {
+        return GET(0, n, l, r, index);
+    }
+ 
+    int GET(int L, int R, int l, int r, int index)
+    {
+        if (l <= L && R <= r)
+        {
+            return tree[index].sum;
+        }
+        if (r <= L || R <= l)
+        {
+            return 0;
+        }
+        int M = (L + R) / 2;
+        return GET(L, M, l, r, tree[index].l) + GET(M, R, l, r, tree[index].r);
+    }
+};
