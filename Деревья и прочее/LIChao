@@ -1,0 +1,70 @@
+struct LiChaoMax {
+    static const int LLL = -10e10 - 1, RRR = 10e10;
+    struct field {
+        int a = 0, b = -1e10;
+        int l = -1, r = -1;
+    };
+    vector<field> tree;
+    LiChaoMax()
+    {
+        tree.emplace_back();
+    }
+    void add(int a, int b)
+    {
+        ADD(a, b, LLL, RRR, 0);
+    }
+    void ADD(int a,int b, int l, int r, int index)
+    {
+        int mid = (l + r) / 2;
+        if (a * mid + b > tree[index].a * mid + tree[index].b)
+        {
+            swap(a, tree[index].a); swap(b, tree[index].b);
+        }
+        if (l + 1 == r)return;
+        if (a * l + b > tree[index].a * l + tree[index].b)
+        {
+            if (tree[index].l == -1)
+            {
+                tree[index].l = tree.size();
+                tree.emplace_back();
+            }
+            ADD(a, b, l, mid, tree[index].l);
+        }
+        if (a * (r-1)+b > tree[index].a * (r - 1) + tree[index].b)
+        {
+            if (tree[index].r == -1)
+            {
+                tree[index].r = tree.size();
+                tree.emplace_back();
+            }
+            ADD(a, b, mid + 1, r, tree[index].r);
+        }
+    }
+
+    int getmax(int pos)
+    {
+        return GETMAX(LLL, RRR, 0, pos);
+    }
+
+    int GETMAX(int l, int r, int index, int pos)
+    {
+        int m = (l + r) / 2;
+        if (pos == m)
+        {
+            return tree[index].a * pos + tree[index].b;
+        }
+        if (pos < m)
+        {
+            if (tree[index].l == -1)
+            {
+                return tree[index].a * pos + tree[index].b;
+            }
+            return max(GETMAX(l, m, tree[index].l, pos), tree[index].a * pos + tree[index].b);
+        }
+        if (tree[index].r == -1)
+        {
+            return tree[index].a * pos + tree[index].b;
+        }
+        return max(GETMAX(m + 1, r, tree[index].r, pos), tree[index].a * pos + tree[index].b);
+    }
+};
