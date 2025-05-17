@@ -34,6 +34,8 @@ using namespace std;
 //#define ress(a, n, b) a.clear(); a.resize(n, b); 
 #define int long long
 
+//using int128 = __int128_t;
+
 void solve()
 {
 
