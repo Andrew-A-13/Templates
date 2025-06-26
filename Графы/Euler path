@@ -1,4 +1,5 @@
 //Граф ощищает все рёбра вошедшие в цикл!
+// Not working!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 vector<int> euler(vector<multiset<int>>& Gr, int st)
 {
     vector<int> res;
