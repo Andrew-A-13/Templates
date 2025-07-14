@@ -1,0 +1,407 @@
+struct Treap {
+    
+    static int GeneratePriority()
+    {        
+        return uniform_int_distribution<int>()(Generator);
+    }
+
+    struct field {
+        int priority;
+        int sz = 1;
+        int l = -1, r = -1;
+        int mx = -1e18;
+        int add = 0;
+        int x;
+        int key;
+        int sum_of_keys;
+        int delta = 1e18;
+        int mindelta = 1e18;
+        field(int a, int b)
+        {
+            priority = GeneratePriority();
+            mx = a - b;
+            this->x = a - b;
+            key = a;
+            sum_of_keys = a;
+        }
+    };
+    vector<field> tree;
+    int root = -1;
+
+    void recount(int index)
+    {
+        if (index == -1)return;
+        tree[index].sz = 1;
+        tree[index].mx = tree[index].x;
+        tree[index].sum_of_keys = tree[index].key;
+        tree[index].mindelta = tree[index].delta;
+        if (tree[index].l != -1)
+        {
+            tree[index].sz += tree[tree[index].l].sz;
+            tree[index].mx = max(tree[index].mx, tree[tree[index].l].mx);
+            tree[index].sum_of_keys += tree[tree[index].l].sum_of_keys;
+            tree[index].mindelta = min(tree[index].mindelta, tree[tree[index].l].mindelta);
+        }
+        if (tree[index].r != -1)
+        {
+            tree[index].sz += tree[tree[index].r].sz;
+            tree[index].mx = max(tree[index].mx, tree[tree[index].r].mx);
+            tree[index].sum_of_keys += tree[tree[index].r].sum_of_keys;
+            tree[index].mindelta = min(tree[index].mindelta, tree[tree[index].r].mindelta);
+        }
+    }
+
+    void push(int index)
+    {
+        if (index == -1)return;
+        if (tree[index].add != 0)
+        {
+            int a = tree[index].add; tree[index].add = 0;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].mx += a;
+                tree[tree[index].l].add += a;
+                tree[tree[index].l].x += a;
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].mx += a;
+                tree[tree[index].r].add += a;
+                tree[tree[index].r].x += a;
+            }
+        }
+       /* if (tree[index].inverse)
+        {
+            tree[index].inverse = false;
+            if (tree[index].l != -1)
+            {
+                tree[tree[index].l].inverse = !tree[tree[index].l].inverse;
+            }
+            if (tree[index].r != -1)
+            {
+                tree[tree[index].r].inverse = !tree[tree[index].r].inverse;
+            }
+            swap(tree[index].l, tree[index].r);
+        }*/
+    }
+
+    int merge(int l, int r)
+    {
+        push(l); push(r);
+        if (l == -1)return r;
+        if (r == -1)return l;
+        if (tree[l].priority > tree[r].priority)
+        {
+            tree[l].r = merge(tree[l].r, r);
+            recount(l);
+            return l;
+        }
+        else
+        {
+            tree[r].l = merge(l, tree[r].l);
+            recount(r);
+            return r;
+        }
+    }
+
+    // key = k -> L = {элементы не больше k}
+    pair<int, int> split(int index, int key)
+    {
+        if (index == -1)
+        {
+            return { -1,-1 };
+        }
+        push(index);
+
+        if (tree[index].key > key)
+        {
+            auto [L, R] = split(tree[index].l, key);
+            tree[index].l = R;
+            recount(index);
+            return { L,index };
+        }
+        else
+        {
+            auto [L, R] = split(tree[index].r, key);
+            tree[index].r = L;
+            recount(index);
+            return{ index,R };
+        }
+        //{
+        //    return { -1,index };
+        //}
+        //if (key >= tree[index].sz)
+        //{
+        //    return { index,-1 };
+        //}*/
+        //if (tree[index].l == -1)
+        //{
+        //    if (key == 1)
+        //    {
+        //        int R = tree[index].r;
+        //        tree[index].r = -1;
+        //        recount(index);
+        //        return { index,R };
+        //    }
+        //    auto [L, R] = split(tree[index].r, key - 1);
+        //    tree[index].r = L;
+        //    recount(index);
+        //    return { index,R };
+        //}
+        //if (key == tree[tree[index].l].sz + 1)
+        //{
+        //    int R = tree[index].r;
+        //    tree[index].r = -1;
+        //    recount(index);
+        //    return { index,R };
+        //}
+        //if (key <= tree[tree[index].l].sz)
+        //{
+        //    auto [L, R] = split(tree[index].l, key);
+        //    tree[index].l = R;
+        //    recount(index);
+        //    return { L,index };
+        //}
+        //else
+        //{
+        //    auto [L, R] = split(tree[index].r, key - tree[tree[index].l].sz - 1);
+        //    tree[index].r = L;
+        //    recount(index);
+        //    return { index,R };
+        //}
+    }
+
+    // Добавить элемент после элемннта key
+    void insert(int a, int b)
+    {
+        int key = a;
+        auto [L, R] = split(root, a);
+        tree.push_back(field(a, b));
+        int mid = tree.size() - 1;
+        
+        
+        if (R != -1)
+        {
+            tree[R].add -= a;
+            tree[R].mx -= a;
+            tree[R].x -= a;
+        }
+        auto [L1, L2] = split_for_one_last(L);
+        int a1 = 0;
+        if (L2 != -1)
+        {
+            a1 = tree[L2].key;
+        }
+        L = merge(L1, L2);
+        tree[mid].delta = a - a1;
+        tree[mid].mindelta = a - a1;
+
+        auto [R1, R2] = split_for_one_first(R);
+        if (R1 != -1)
+        {
+            tree[R1].delta = tree[R1].key - a;
+            tree[R1].mindelta = tree[R1].delta;
+        }
+        R = merge(R1, R2);
+        root = merge(L, mid);
+        root = merge(root, R);
+    }
+
+    pair<int, int> split_for_one_last(int index)
+    {
+        if (index == -1)return { -1,-1 };
+        push(index);
+        if (tree[index].r != -1)
+        {
+            auto [L, R] = split_for_one_last(tree[index].r);
+            tree[index].r = L;
+            recount(index);
+            return{ index,R };
+        }
+        else
+        {
+            int L = tree[index].l;
+            tree[index].l = -1;
+            recount(index);
+            return{ L,index };
+        }
+    }
+
+    pair<int, int> split_for_one_first(int index)
+    {
+        if (index == -1)return { -1,-1 };
+        push(index);
+        if (tree[index].l != -1)
+        {
+            auto [L, R] = split_for_one_first(tree[index].l);
+            tree[index].l = R;
+            recount(index);
+            return{ L,index };
+        }
+        else
+        {
+            int R = tree[index].r;
+            tree[index].r = -1;
+            recount(index);
+            return{ index,R };
+        }
+    }
+
+
+    void erase(int a, int b)
+    {
+        auto [L, R] = split(root, a);
+        auto [LL, mid] = split_for_one_last(L);
+        if (R != -1)
+        {
+            tree[R].add += a;
+            tree[R].mx += a;
+            tree[R].x += a;
+        }
+        int a1 = 0;
+        auto [LL1, LL2] = split_for_one_last(LL);
+        if (LL2 != -1)
+        {
+            a1 = tree[LL2].key;
+        }
+        LL = merge(LL1, LL2);
+        auto [R1, R2] = split_for_one_first(R);
+        if (R1 != -1)
+        {
+            tree[R1].delta = tree[R1].key - a1;
+            tree[R1].mindelta = tree[R1].delta;
+        }
+    
+        R = merge(R1, R2);
+        root = merge(LL, R);
+    }
+
+    int find_first_more_than_zero(int index)
+    {
+        if (index == -1)return -1;
+        push(index);
+        if (tree[index].l != -1 && tree[tree[index].l].mx > 0)
+        {
+            return find_first_more_than_zero(tree[index].l);
+        }
+        if (tree[index].x > 0)
+        {
+            return tree[index].key;
+        }
+        return find_first_more_than_zero(tree[index].r);
+    }
+
+    int find_first_more_than_zero_from(int key)
+    {
+        auto [L, R] = split(root, key);
+        int ans = find_first_more_than_zero(R);
+        root = merge(L, R);
+        return ans;
+    }
+
+    int sum_of_keys(int a)
+    {
+        auto [L, R] = split(root, a);
+        int b = 0;
+        if (L != -1)
+        {
+            b = tree[L].sum_of_keys;
+        }
+        root = merge(L, R);
+        return b;
+    }
+
+    int find_delta(int index, int mn)
+    {
+        if (index == -1)return -1;
+        if (tree[index].mindelta > mn)return -1;
+        if (tree[index].r != -1 && tree[tree[index].r].mindelta <= mn)
+        {
+            return find_delta(tree[index].r, mn);
+        }
+        if (tree[index].delta <= mn)
+        {
+            return tree[index].key;
+        }
+        return find_delta(tree[index].l, mn);
+    }
+
+    int delta_from(int key, int mn)
+    {
+        auto [L, R] = split(root, key);
+        auto [R1, R2] = split_for_one_first(R);
+        int ans = find_delta(R2, mn);
+        if (ans == -1)
+        {
+            if (tree[R1].key <= mn)
+            {
+                ans = tree[R1].key;
+            }
+        }
+        R = merge(R1, R2);
+        root = merge(L, R);
+        return ans;
+    }
+
+    void walk(vector<int>& A, int index)
+    {
+        push(index);
+        if (index == -1)return;
+        walk(A, tree[index].l);
+        A.push_back(tree[index].delta);
+        walk(A, tree[index].r);
+    }
+
+    vector<int> print()
+    {
+        vector<int> A;
+        walk(A, root);
+        return A;
+    }
+
+    //void add(int l, int r, int x)
+    //{
+    //    auto [L, R] = split(root, r);
+    //    auto [LL, M] = split(L, l);
+    //    tree[M].add += x;
+    //    tree[M].mn += x;
+    //    tree[M].x += x;
+    //    root = merge(LL, M);
+    //    root = merge(root, R);
+    //}
+
+    //void reverse(int l, int r)
+    //{
+    //    auto [L, R] = split(root, r);
+    //    auto [LL, M] = split(L, l);
+    //    tree[M].inverse = !tree[M].inverse;
+    //    root = merge(LL, M);
+    //    root = merge(root, R);
+    //}
+
+    //int MIN(int l, int r)
+    //{
+    //    auto [L, R] = split(root, r);
+    //    auto [LL, M] = split(L, l);
+    //    int ans = tree[M].mn;
+    //    root = merge(LL, M);
+    //    root = merge(root, R);
+    //    return ans;
+    //}
+
+    //// -->
+    //void cycleshift(int l, int r, int t)
+    //{
+    //    //l--, r--;
+    //    int len = r - l;
+    //    t %= len;
+    //    t = (len - t) % len;
+    //    auto [L, R] = split(root, r);
+    //    auto [LL, M] = split(L, l);
+    //    auto [ML, MR] = split(M, t);
+    //    M = merge(MR, ML);
+    //    root = merge(LL, M);
+    //    root = merge(root, R);
+    //}
+
+};
