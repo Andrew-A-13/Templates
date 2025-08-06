@@ -29,7 +29,7 @@ using namespace std;
 //using int128 = __int128_t;
 
 #define endl '\n'
-#define Endl '\n'
+#define Endl endl
 #define all(v) (v).begin(), (v).end()
 //#define res(a, n) a.clear(); a.resize(n);
 //#define ress(a, n, b) a.clear(); a.resize(n, b); 
