@@ -1,4 +1,3 @@
-template by https://codeforces.com/profile/heesooyaam
 template<const int MAXV, const int ALL_PRIMES = 78498>
 class factorization_sieve_t {
 private:
