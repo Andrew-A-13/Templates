@@ -1,0 +1,125 @@
+struct SegTree {
+    struct field {
+        field()
+        {
+            lazy = 0;
+            x = neutral;
+        }
+        int x;
+        int index;
+        int lazy;
+    };
+    static const int N = 500000;
+ 
+    static const int neutral = -1e16;
+    field Tree[4 * N];
+    int st;
+ 
+    void reset(int n)
+    {
+        for (int i = 0; i < min(4 * n + 3, 4 * N); i++)
+        {
+            Tree[i] = field();
+        }
+        st = 0;
+        while ((1 << st) < n)
+        {
+            st++;
+        }
+    }
+ 
+    void build(const vector<int>& A)
+    {
+        for (int i = (1 << st); i < (1 << st) + A.size(); i++)
+        {
+            Tree[i].x = A[i - (1 << st)];
+            Tree[i].index = i - (1 << st);
+        }
+        int cur_st = st - 1;
+        while (cur_st >= 0)
+        {
+            for (int i = (1 << cur_st); i < 2 * (1 << cur_st); i++)
+            {
+                Tree[i].x = max(Tree[i * 2].x, Tree[2 * i + 1].x);
+                if (Tree[i].x == Tree[i * 2].x)
+                {
+                    Tree[i].index = Tree[i * 2].index;
+                }
+                else
+                {
+                    Tree[i].index = Tree[i * 2 + 1].index;
+                }
+            }
+            cur_st--;
+        }
+    }
+ 
+    void reset_and_build(const vector<int>& A)
+    {
+        reset(A.size());
+        build(A);
+    }
+ 
+    /*void push(int index)
+    {
+        if (index >= (1 << st))
+            return;
+        int d = Tree[index].lazy; Tree[index].lazy = 0;
+        Tree[2 * index].lazy += d; Tree[2 * index].x += d;
+        Tree[2 * index + 1].lazy += d; Tree[2 * index + 1].x += d;
+    }*/
+ 
+    void add(int l, int r, int S, int index = 1, int cur_st = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (r <= LL || RR <= l)
+        {
+            return;
+        }
+        if (l <= LL && RR <= r)
+        {
+            Tree[index].x += S;
+            Tree[index].lazy += S;
+            return;
+        }
+        add(l, r, S, index * 2, cur_st + 1);
+        add(l, r, S, index * 2 + 1, cur_st + 1);
+        Tree[index].x = max(Tree[index * 2].x, Tree[index * 2 + 1].x) + Tree[index].lazy;
+        if (max(Tree[index * 2].x, Tree[index * 2 + 1].x) == Tree[index * 2].x)
+        {
+            Tree[index].index = Tree[index * 2].index;
+        }
+        else
+        {
+            Tree[index].index = Tree[index * 2 + 1].index;
+        }
+    }
+ 
+    pair<int, int> Get(int l, int r, int index = 1, int cur_st = 0, int S = 0)
+    {
+        int LL = index * (1 << (st - cur_st)) - (1 << st);
+        int RR = LL + (1 << (st - cur_st));
+        if (r <= LL || RR <= l)
+        {
+            return { neutral,-1 };
+        }
+        if (l <= LL && RR <= r)
+        {
+            return { Tree[index].x + S,Tree[index].index };
+        }
+        S += Tree[index].lazy;
+        auto [mn1, i1] = Get(l, r, index * 2, cur_st + 1, S);
+        auto [mn2, i2] = Get(l, r, index * 2 + 1, cur_st + 1, S);
+        int iii;
+        if (mn1 == max(mn1, mn2))
+        {
+            iii = i1;
+        }
+        else
+        {
+            iii = i2;
+        }
+        return { max(mn1,mn2),iii };
+    }
+};
