@@ -48,6 +48,8 @@ signed main()
 {
     ios::sync_with_stdio(false);
     cin.tie(0); cout.tie(0);
+    //cout << fixed;
+    //cout.precision(16);
     int t = 1;
     cin >> t;
     for (int u = 0; u < t; u++)
