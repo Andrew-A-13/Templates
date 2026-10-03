@@ -1,12 +1,12 @@
 template<class Key>
 struct TwoSat {
-
+ 
     /*Key extra;
     void inc()
     {
         extra.first++;
     }*/
-
+ 
     map<Key, int> I; //можно ускорить заменив I на функцию за O(1) и изначально инициализируя граф
     vector<vector<int>> Gr;
     vector<int> cmp;
@@ -16,24 +16,24 @@ struct TwoSat {
         Gr.push_back(vector<int>());
         Gr.push_back(vector<int>());
     }
-
+ 
     void Xor(Key u, Key v)
     {
         addedge(u, v, true, false);
         addedge(u, v, false);
     }
-
+ 
     void same(Key u, Key v)
     {
         addedge(u, v, false, false);
         addedge(u, v);
     }
-
+ 
     void Or(Key u, Key v)
     {
         addedge(u, v, false);
     }
-
+ 
     void addedge(Key from, Key to, bool from_original = true, bool to_original = true)
     {
         if (!I.contains(from))
@@ -47,13 +47,13 @@ struct TwoSat {
         int From = I[from], To = I[to];
         if (!from_original) From++;
         if (!to_original) To++;
-
+ 
         Gr[From].push_back(To);
         From ^= 1;
         To ^= 1;
         Gr[To].push_back(From);
     }
-
+ 
     bool find_basic_solution()
     {
         int n = Gr.size();
@@ -92,14 +92,14 @@ struct TwoSat {
         }
         return true;
     }
-
+ 
     bool getvalue(Key k)
     {
         int i = I[k];
         return cmp[i] > cmp[i + 1];
     }
-
-    void no_more_than_one(vector<Key>& A)
+    // cnt == 1 -> no_more_than_one
+    void no_more_than_some(vector<Key>& A, int cnt)
     {
         int n = A.size();
         vector<int> index(n);
@@ -123,7 +123,9 @@ struct TwoSat {
             addedge_main(index[i], d[i]);
             if (i == 0)continue;
             addedge_main(d[i - 1], d[i]);
-            addedge_main(index[i], d[i - 1], true, false);
+            if (i >= cnt) {
+                addedge_main(index[i], d[i - cnt], true, false);
+            }
         }
     }
 private:
@@ -131,13 +133,13 @@ private:
     {
         if (!from_original) From++;
         if (!to_original) To++;
-
+ 
         Gr[From].push_back(To);
         From ^= 1;
         To ^= 1;
         Gr[To].push_back(From);
     }
-
+ 
     static void dfs1(vector<vector<int>>& Gr, vector<bool>& used, int index, vector<int>& topsort)
     {
         used[index] = true;
@@ -150,7 +152,7 @@ private:
         }
         topsort.push_back(index);
     }
-
+ 
     static void dfs2(vector<vector<int>>& Gr, vector<bool>& used, int index, int C, vector<int>& cmp)
     {
         used[index] = true; cmp[index] = C;
